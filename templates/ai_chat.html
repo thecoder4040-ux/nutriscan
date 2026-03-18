@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Nutrition Assistant</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet"/>
+  <style>
+    :root {
+      --primary: #2ecc71;
+      --primary-dark: #27ae60;
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --text: #e8eaf6;
+      --text-muted: #8892b0;
+      --border: #2d3154;
+      --user-bubble: #1e3a5f;
+      --ai-bubble: #1a2535;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    .chat-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+    .ai-avatar {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--primary), #3498db);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .chat-header h5 { font-weight: 600; margin: 0; font-size: 1rem; }
+    .chat-header small { color: var(--text-muted); font-size: 0.78rem; }
+    .status-dot {
+      width: 9px; height: 9px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+    }
+
+    /* ── Messages ── */
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      scroll-behavior: smooth;
+    }
+    #messages::-webkit-scrollbar { width: 5px; }
+    #messages::-webkit-scrollbar-track { background: transparent; }
+    #messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 80%;
+      animation: fadeUp 0.25s ease;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .message.user { align-self: flex-end; flex-direction: row-reverse; }
+    .message.ai   { align-self: flex-start; }
+
+    .msg-avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .message.user .msg-avatar {
+      background: linear-gradient(135deg, #3498db, #9b59b6);
+    }
+    .message.ai .msg-avatar {
+      background: linear-gradient(135deg, var(--primary), #2980b9);
+    }
+
+    .bubble {
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-width: 100%;
+      word-break: break-word;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .message.user .bubble {
+      background: var(--user-bubble);
+      border-bottom-right-radius: 4px;
+      color: #cce5ff;
+    }
+    .message.ai .bubble {
+      background: var(--ai-bubble);
+      border-bottom-left-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .bubble-meta {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: right;
+    }
+    .message.ai .bubble-meta { text-align: left; }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: flex; gap: 5px;
+      padding: 14px 18px;
+      align-items: center;
+    }
+    .typing-indicator span {
+      width: 8px; height: 8px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-6px); }
+    }
+
+    /* ── Suggestions ── */
+    .suggestions {
+      padding: 10px 16px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .suggestion-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 20px;
+      padding: 5px 13px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .suggestion-btn:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ── Input area ── */
+    .chat-input-area {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      flex-shrink: 0;
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    #userInput {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      color: var(--text);
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      overflow-y: auto;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+    #userInput:focus { border-color: var(--primary); }
+    #userInput::placeholder { color: var(--text-muted); }
+
+    #sendBtn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    #sendBtn:hover { background: var(--primary-dark); transform: scale(1.05); }
+    #sendBtn:disabled { background: var(--border); cursor: not-allowed; transform: none; }
+
+    /* ── Welcome card ── */
+    .welcome-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      max-width: 420px;
+      margin: auto;
+    }
+    .welcome-card .icon { font-size: 3rem; margin-bottom: 10px; }
+    .welcome-card h4 { color: var(--primary); margin-bottom: 8px; }
+    .welcome-card p  { color: var(--text-muted); font-size: 0.88rem; }
+
+    /* ── Product context badge ── */
+    #productBadge {
+      display: none;
+      background: #1e3a5f;
+      border: 1px solid #3498db;
+      border-radius: 8px;
+      padding: 6px 12px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+      color: #7ec8e3;
+    }
+
+    /* Alert styling */
+    .alert-warning-inline {
+      background: rgba(241,196,15,0.1);
+      border-left: 3px solid #f1c40f;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #f1c40f;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 576px) {
+      .message { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="chat-header">
+  <div class="ai-avatar">🥦</div>
+  <div class="flex-grow-1">
+    <h5>NutriAI Assistant <span class="status-dot"></span></h5>
+    <small>Powered by Claude · Personalized to your health profile</small>
+  </div>
+  <button class="btn btn-sm btn-outline-secondary" onclick="clearChat()" title="Clear chat">
+    <i class="bi bi-arrow-counterclockwise"></i>
+  </button>
+  <a href="/" class="btn btn-sm btn-outline-secondary ms-1" title="Back to app">
+    <i class="bi bi-house"></i>
+  </a>
+</div>
+
+<!-- Product context badge (shown when analyzing a product) -->
+<div style="padding: 0 16px; background: var(--bg);">
+  <div id="productBadge">
+    <i class="bi bi-upc-scan me-1"></i>
+    Discussing product: <strong id="productName">—</strong>
+    <button class="btn btn-sm float-end p-0 text-muted" onclick="clearProduct()">
+      <i class="bi bi-x"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Messages -->
+<div id="messages">
+  <div class="welcome-card">
+    <div class="icon">🤖</div>
+    <h4>Hi, I'm NutriAI!</h4>
+    <p>
+      Ask me anything about nutrition, your scanned products, health conditions,
+      meal planning, or dietary advice. I know your personal health profile!
+    </p>
+  </div>
+</div>
+
+<!-- Quick suggestions -->
+<div class="suggestions" id="suggestions">
+  <button class="suggestion-btn" onclick="sendSuggestion('Is my diet on track today?')">📊 Today's diet</button>
+  <button class="suggestion-btn" onclick="sendSuggestion('What should I eat for breakfast?')">🍳 Breakfast ideas</button>
+  <button class="suggestion-btn" onclick="sendSuggestion('How much sugar should I have daily?')">🍬 Sugar limits</button>
+  <button class="suggestion-btn" onclick="sendSuggestion('Give me high protein snack ideas')">💪 Protein snacks</button>
+  <button class="suggestion-btn" onclick="sendSuggestion('What foods should I avoid for my conditions?')">⚠️ My restrictions</button>
+</div>
+
+<!-- Input area -->
+<div class="chat-input-area">
+  <div class="input-row">
+    <textarea id="userInput" placeholder="Ask anything about nutrition, products, your health..." rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button id="sendBtn" onclick="sendMessage()">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  let chatHistory = [];
+  let currentProductId = null;
+  const sessionId = 'sess_' + Date.now();
+
+  // ── Auto-resize textarea ──
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  // ── Key handler ──
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  // ── Append a message bubble ──
+  function appendMessage(role, text, time) {
+    const isUser = role === 'user';
+    const timeStr = time || new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const avatarIcon = isUser ? '👤' : '🥦';
+
+    const div = document.createElement('div');
+    div.className = `message ${role}`;
+    div.innerHTML = `
+      <div class="msg-avatar">${avatarIcon}</div>
+      <div>
+        <div class="bubble">${formatText(text)}</div>
+        <div class="bubble-meta">${timeStr}</div>
+      </div>
+    `;
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+
+  // ── Typing indicator ──
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'message ai';
+    div.id = 'typing';
+    div.innerHTML = `
+      <div class="msg-avatar">🥦</div>
+      <div class="bubble typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    `;
+    messagesEl.appendChild(div);
+    scrollToBottom();
+  }
+  function removeTyping() {
+    const el = document.getElementById('typing');
+    if (el) el.remove();
+  }
+
+  // ── Send message ──
+  async function sendMessage(overrideText) {
+    const input = document.getElementById('userInput');
+    const text = (overrideText || input.value).trim();
+    if (!text) return;
+
+    // Clear input
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Remove welcome card if present
+    const welcome = document.querySelector('.welcome-card');
+    if (welcome) welcome.remove();
+
+    appendMessage('user', text);
+    chatHistory.push({ role: 'user', content: text });
+
+    const btn = document.getElementById('sendBtn');
+    btn.disabled = true;
+    showTyping();
+
+    try {
+      const res = await fetch('/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history: chatHistory.slice(-10),
+          product_id: currentProductId,
+          session_id: sessionId
+        })
+      });
+
+      const data = await res.json();
+      removeTyping();
+
+      if (data.error) {
+        appendMessage('ai', '⚠️ ' + data.error);
+      } else {
+        const reply = data.reply;
+        appendMessage('ai', reply);
+        chatHistory.push({ role: 'assistant', content: reply });
+
+        if (data.product_context && !currentProductId) {
+          document.getElementById('productName').textContent = data.product_context;
+          document.getElementById('productBadge').style.display = 'block';
+        }
+      }
+    } catch (err) {
+      removeTyping();
+      appendMessage('ai', '⚠️ Connection error. Please try again.');
+    }
+
+    btn.disabled = false;
+    input.focus();
+  }
+
+  function sendSuggestion(text) {
+    document.getElementById('userInput').value = text;
+    sendMessage();
+  }
+
+  // ── Set product context (called from product page) ──
+  function setProduct(productId, productName) {
+    currentProductId = productId;
+    document.getElementById('productName').textContent = productName;
+    document.getElementById('productBadge').style.display = 'block';
+  }
+
+  function clearProduct() {
+    currentProductId = null;
+    document.getElementById('productBadge').style.display = 'none';
+  }
+
+  function clearChat() {
+    chatHistory = [];
+    currentProductId = null;
+    document.getElementById('productBadge').style.display = 'none';
+    messagesEl.innerHTML = `
+      <div class="welcome-card">
+        <div class="icon">🤖</div>
+        <h4>Hi, I'm NutriAI!</h4>
+        <p>Ask me anything about nutrition, your scanned products, health conditions,
+        meal planning, or dietary advice. I know your personal health profile!</p>
+      </div>`;
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  // ── Format AI text: support **bold**, line breaks ──
+  function formatText(text) {
+    return text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+  }
+
+  // ── Load history on page load (optional) ──
+  async function loadHistory() {
+    try {
+      const res = await fetch('/ai/history');
+      const data = await res.json();
+      if (data.history && data.history.length > 0) {
+        // Show last 3 exchanges
+        const recent = data.history.slice(0, 3).reverse();
+        const welcome = document.querySelector('.welcome-card');
+        if (welcome) welcome.remove();
+        recent.forEach(h => {
+          const t = new Date(h.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+          appendMessage('user', h.user_message, t);
+          appendMessage('ai', h.assistant_response, t);
+          chatHistory.push({ role: 'user', content: h.user_message });
+          chatHistory.push({ role: 'assistant', content: h.assistant_response });
+        });
+      }
+    } catch (_) {}
+  }
+
+  // Uncomment to restore previous session:
+  // window.addEventListener('load', loadHistory);
+</script>
+</body>
+</html>

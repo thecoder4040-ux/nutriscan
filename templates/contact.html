@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — NutriScan{% endblock %}
+{% block content %}
+<style>
+:root{--g:#16a34a;--gd:#15803d;--gl:#f0fdf4;--sf:#f8fafc;--bd:#e2e8f0;--tx:#111827;--mu:#6b7280;--rd:14px;--sh:0 2px 16px rgba(0,0,0,.07);}
+.pg{padding:48px 0 80px;}
+.hero{text-align:center;margin-bottom:48px;}
+.hero h1{font-family:"Syne",sans-serif;font-size:2.2rem;font-weight:800;color:var(--tx);margin:0 0 10px;}
+.hero p{color:var(--mu);font-size:1rem;max-width:520px;margin:0 auto;}
+.layout{display:grid;grid-template-columns:1fr 420px;gap:28px;max-width:1000px;margin:0 auto;}
+.card{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);overflow:hidden;}
+.card-head{padding:18px 24px;border-bottom:1px solid var(--bd);background:var(--sf);}
+.card-head h4{font-family:"Syne",sans-serif;font-weight:700;font-size:.95rem;color:var(--tx);margin:0;}
+.card-body{padding:24px;}
+.fd{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.fd label{font-size:.79rem;font-weight:600;color:#374151;}
+.fd label span{color:#dc2626;}
+.fd input,.fd select,.fd textarea{padding:10px 13px;border:1.5px solid var(--bd);border-radius:9px;font-size:.88rem;background:#f9fafb;outline:none;transition:all .2s;width:100%;font-family:inherit;}
+.fd input:focus,.fd select:focus,.fd textarea:focus{border-color:var(--g);background:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.09);}
+.fd textarea{resize:vertical;min-height:130px;}
+.btn-send{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-family:"Syne",sans-serif;font-weight:700;font-size:.95rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .2s;}
+.btn-send:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,163,74,.3);}
+.info-tile{display:flex;align-items:flex-start;gap:13px;padding:14px 0;border-bottom:1px solid var(--bd);}
+.info-tile:last-child{border-bottom:none;}
+.info-ic{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.info-tile h6{font-family:"Syne",sans-serif;font-weight:700;font-size:.83rem;color:var(--tx);margin:0 0 3px;}
+.info-tile p{font-size:.8rem;color:var(--mu);margin:0;line-height:1.4;}
+.fmsg{padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:.85rem;display:flex;align-items:center;gap:9px;}
+@media(max-width:768px){.layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="pg">
+<div class="container" style="max-width:1060px;padding:0 20px;">
+
+<div class="hero">
+  <h1>&#128172; Get in Touch</h1>
+  <p>Have a question, suggestion or issue? Send us a message and our team will respond as soon as possible.</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}{% for cat,msg in messages %}
+<div class="fmsg" style="background:{{ '#f0fdf4' if cat=='success' else '#fef2f2' }};border:1px solid {{ '#bbf7d0' if cat=='success' else '#fecaca' }};color:{{ '#15803d' if cat=='success' else '#dc2626' }};max-width:1000px;margin:0 auto 18px;">
+  <i class="bi bi-{{ 'check-circle-fill' if cat=='success' else 'exclamation-circle-fill' }}"></i>{{ msg }}
+</div>
+{% endfor %}{% endif %}{% endwith %}
+
+<div class="layout">
+
+  <!-- Contact Form -->
+  <div class="card">
+    <div class="card-head"><h4><i class="bi bi-envelope-fill me-2" style="color:var(--g);"></i>Send a Message</h4></div>
+    <div class="card-body">
+      <form action="/contact" method="POST">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="fd">
+            <label>Full Name <span>*</span></label>
+            <input type="text" name="name" placeholder="John Doe" required>
+          </div>
+          <div class="fd">
+            <label>Email Address <span>*</span></label>
+            <input type="email" name="email" placeholder="john@example.com" required>
+          </div>
+        </div>
+        <div class="fd">
+          <label>Subject <span>*</span></label>
+          <select name="subject" required>
+            <option value="">Select a subject...</option>
+            <option value="General Inquiry">General Inquiry</option>
+            <option value="Product Issue">Product Issue</option>
+            <option value="Feature Request">Feature Request</option>
+            <option value="Bug Report">Bug Report</option>
+            <option value="Account Help">Account Help</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="fd">
+          <label>Message <span>*</span></label>
+          <textarea name="message" placeholder="Write your message here..." required></textarea>
+        </div>
+        <button type="submit" class="btn-send">
+          <i class="bi bi-send-fill"></i> Send Message
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Info Panel -->
+  <div style="display:flex;flex-direction:column;gap:16px;">
+    <div class="card">
+      <div class="card-head"><h4><i class="bi bi-info-circle-fill me-2" style="color:var(--g);"></i>Contact Info</h4></div>
+      <div class="card-body">
+        <div class="info-tile">
+          <div class="info-ic" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-envelope-fill"></i></div>
+          <div><h6>Email</h6><p>support@nutriscan.app</p></div>
+        </div>
+        <div class="info-tile">
+          <div class="info-ic" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-clock-fill"></i></div>
+          <div><h6>Response Time</h6><p>We typically reply within 24 hours on business days.</p></div>
+        </div>
+        <div class="info-tile">
+          <div class="info-ic" style="background:#fef3c7;color:#d97706;"><i class="bi bi-shield-check-fill"></i></div>
+          <div><h6>Privacy</h6><p>Your message is only visible to our admin team. We never share your info.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h4><i class="bi bi-question-circle-fill me-2" style="color:#7c3aed;"></i>Quick Help</h4></div>
+      <div class="card-body" style="padding:16px 20px;">
+        <a href="/products" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);text-decoration:none;color:var(--tx);font-size:.84rem;font-weight:600;transition:color .15s;">
+          <i class="bi bi-search" style="color:var(--g);"></i> Search Products
+        </a>
+        <a href="/" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);text-decoration:none;color:var(--tx);font-size:.84rem;font-weight:600;transition:color .15s;">
+          <i class="bi bi-house-fill" style="color:var(--g);"></i> Back to Home
+        </a>
+        <a href="/about" style="display:flex;align-items:center;gap:10px;padding:10px 0;text-decoration:none;color:var(--tx);font-size:.84rem;font-weight:600;transition:color .15s;">
+          <i class="bi bi-people-fill" style="color:var(--g);"></i> About NutriScan
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+{% endblock %}

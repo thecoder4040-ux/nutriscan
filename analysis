@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Analysis — {{ product['name'] }}{% endblock %}
+{% block content %}
+<style>
+:root{--g:#16a34a;--gd:#15803d;--gl:#f0fdf4;--sf:#f8fafc;--bd:#e2e8f0;--tx:#111827;--mu:#6b7280;--rd:14px;--sh:0 2px 16px rgba(0,0,0,.07);}
+.pg{padding:36px 0 72px;}
+.back-bar{margin-bottom:22px;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;border:1.5px solid var(--bd);background:#fff;color:var(--tx);font-size:.83rem;font-weight:600;text-decoration:none;transition:all .15s;}
+.back-btn:hover{border-color:var(--g);color:var(--g);background:var(--gl);}
+
+/* Hero verdict */
+.verdict{border-radius:20px;padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;gap:20px;box-shadow:var(--sh);}
+.verdict.safe{background:var(--gl);border:2px solid #bbf7d0;}
+.verdict.caution{background:#fffbeb;border:2px solid #fde68a;}
+.verdict.danger{background:#fef2f2;border:2px solid #fecaca;}
+.verdict-icon{font-size:2.8rem;flex-shrink:0;}
+.verdict-title{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;margin:0 0 4px;}
+.verdict.safe .verdict-title{color:#15803d;}
+.verdict.caution .verdict-title{color:#92400e;}
+.verdict.danger .verdict-title{color:#991b1b;}
+.verdict-sub{color:var(--mu);font-size:.88rem;margin:0;}
+
+/* Section cards */
+.scard{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);margin-bottom:20px;overflow:hidden;}
+.scard-h{padding:13px 20px;border-bottom:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;gap:9px;}
+.scard-h span{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;color:var(--tx);}
+.scard-b{padding:20px;}
+
+/* Warnings & positives */
+.msg{display:flex;align-items:flex-start;gap:11px;padding:12px 15px;border-radius:11px;margin-bottom:9px;font-size:.85rem;line-height:1.5;}
+.msg:last-child{margin-bottom:0;}
+.msg-icon{font-size:1.05rem;flex-shrink:0;margin-top:1px;}
+.msg.danger{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+.msg.caution{background:#fffbeb;border:1px solid #fde68a;color:#78350f;}
+.msg.positive{background:var(--gl);border:1px solid #bbf7d0;color:#14532d;}
+.no-issues{text-align:center;padding:20px;color:var(--mu);font-size:.88rem;}
+
+/* Nutrient table */
+.ntable{width:100%;border-collapse:collapse;}
+.ntable th{font-size:.75rem;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;border-bottom:2px solid var(--bd);text-align:left;}
+.ntable td{padding:11px 12px;border-bottom:1px solid var(--bd);font-size:.86rem;color:var(--tx);}
+.ntable tr:last-child td{border-bottom:none;}
+.ntable tr:hover td{background:var(--sf);}
+.bar-wrap{background:#f1f5f9;border-radius:20px;height:7px;width:100%;min-width:80px;}
+.bar-fill{height:7px;border-radius:20px;transition:width .4s;}
+.tag{display:inline-block;font-size:.71rem;font-weight:700;padding:2px 8px;border-radius:20px;}
+.tag-ok{background:#dcfce7;color:#15803d;}
+.tag-warn{background:#fef3c7;color:#92400e;}
+.tag-bad{background:#fee2e2;color:#991b1b;}
+.tag-good{background:#dbeafe;color:#1e40af;}
+
+/* Profile grid */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bd);font-size:.84rem;}
+.prow:last-child{border-bottom:none;}
+.prow-label{color:var(--mu);font-weight:500;}
+.prow-val{font-weight:700;color:var(--tx);}
+.cond-badge{display:inline-block;background:#fee2e2;color:#991b1b;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:20px;margin:2px 3px 2px 0;}
+.cond-badge.allergy{background:#fef3c7;color:#92400e;}
+.cond-badge.diet{background:#dbeafe;color:#1e40af;}
+.cond-badge.none{background:#f1f5f9;color:var(--mu);}
+
+/* Action buttons */
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px;}
+.btn-pr{padding:11px 24px;border-radius:11px;font-family:'Syne',sans-serif;font-weight:700;font-size:.88rem;text-decoration:none;display:inline-flex;align-items:center;gap:7px;transition:all .15s;border:none;cursor:pointer;}
+.btn-pr.primary{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;}
+.btn-pr.primary:hover{box-shadow:0 6px 20px rgba(22,163,74,.3);transform:translateY(-1px);}
+.btn-pr.secondary{background:#fff;border:1.5px solid var(--bd);color:var(--tx);}
+.btn-pr.secondary:hover{border-color:var(--g);color:var(--g);}
+</style>
+
+<div class="pg">
+<div class="container" style="max-width:860px;padding:0 20px;">
+
+  <div class="back-bar">
+    <a href="/p/{{ product['id'] }}" class="back-btn"><i class="bi bi-arrow-left"></i> Back to {{ product['name'] }}</a>
+  </div>
+
+  <!-- ── Verdict banner ── -->
+  {% if is_safe == 1 %}
+    <div class="verdict safe">
+      <div class="verdict-icon">✅</div>
+      <div>
+        <div class="verdict-title">Safe for You</div>
+        <div class="verdict-sub">{{ product['name'] }} appears suitable for your health profile.</div>
+      </div>
+    </div>
+  {% elif is_safe == 0.5 %}
+    <div class="verdict caution">
+      <div class="verdict-icon">⚠️</div>
+      <div>
+        <div class="verdict-title">Consume with Caution</div>
+        <div class="verdict-sub">{{ product['name'] }} has some concerns for your health profile — read the insights below.</div>
+      </div>
+    </div>
+  {% else %}
+    <div class="verdict danger">
+      <div class="verdict-icon">❌</div>
+      <div>
+        <div class="verdict-title">Not Recommended for You</div>
+        <div class="verdict-sub">{{ product['name'] }} may be harmful given your health conditions — see warnings below.</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ── Warnings ── -->
+  <div class="scard">
+    <div class="scard-h"><i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;"></i><span>Health Warnings</span></div>
+    <div class="scard-b">
+      {% if warnings %}
+        {% for w in warnings %}
+          {% if '⚠️ ALLERGEN' in w or 'not recommended' in w.lower() or 'avoid' in w.lower() or 'dangerous' in w.lower() %}
+            <div class="msg danger"><span class="msg-icon">🚨</span><span>{{ w }}</span></div>
+          {% else %}
+            <div class="msg caution"><span class="msg-icon">⚠️</span><span>{{ w }}</span></div>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="no-issues"><i class="bi bi-check-circle-fill" style="color:var(--g);font-size:1.4rem;display:block;margin-bottom:8px;"></i>No specific warnings for your health profile.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── Positives ── -->
+  {% if positives %}
+  <div class="scard">
+    <div class="scard-h"><i class="bi bi-hand-thumbs-up-fill" style="color:#16a34a;"></i><span>What's Good About This Product</span></div>
+    <div class="scard-b">
+      {% for p in positives %}
+        <div class="msg positive"><span class="msg-icon">✅</span><span>{{ p }}</span></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- ── Nutrient breakdown ── -->
+  <div class="scard">
+    <div class="scard-h"><i class="bi bi-bar-chart-fill" style="color:#2563eb;"></i><span>Nutritional Breakdown vs Daily Limits</span></div>
+    <div class="scard-b" style="padding:0;">
+      <table class="ntable">
+        <thead>
+          <tr>
+            <th>Nutrient</th>
+            <th>This Product</th>
+            <th>Daily Limit</th>
+            <th style="min-width:100px;">% of limit</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set nutrients = [
+            ('Calories',      product['calories'],       2000, 'kcal', 500,  300),
+            ('Sugar',         product['sugar_g'],        25,   'g',    25,   15),
+            ('Fat',           product['fat_g'],          65,   'g',    65,   20),
+            ('Saturated Fat', product['saturated_fat_g'],20,   'g',    10,   5),
+            ('Sodium',        product['sodium_mg'],      2300, 'mg',   500,  300),
+            ('Protein',       product['protein_g'],      50,   'g',    0,    0),
+            ('Fiber',         product['fiber_g'],        30,   'g',    0,    0),
+          ] %}
+          {% for name, val, limit, unit, bad_thresh, warn_thresh in nutrients %}
+          {% set val = val or 0 %}
+          {% set pct = [(val / limit * 100)|round(1), 100]|min %}
+          <tr>
+            <td><strong>{{ name }}</strong></td>
+            <td>{{ val }}{{ unit }}</td>
+            <td>{{ limit }}{{ unit }}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <div class="bar-wrap">
+                  <div class="bar-fill" style="width:{{ pct }}%;background:{{ '#ef4444' if (bad_thresh > 0 and val > bad_thresh) else ('#f59e0b' if (warn_thresh > 0 and val > warn_thresh) else '#16a34a') }};"></div>
+                </div>
+                <span style="font-size:.78rem;color:var(--mu);white-space:nowrap;">{{ pct }}%</span>
+              </div>
+            </td>
+            <td>
+              {% if name == 'Protein' %}
+                <span class="tag {{ 'tag-good' if val >= 10 else 'tag-warn' }}">{{ '✅ Good' if val >= 10 else '⬇️ Low' }}</span>
+              {% elif name == 'Fiber' %}
+                <span class="tag {{ 'tag-good' if val >= 5 else 'tag-warn' }}">{{ '✅ Good' if val >= 5 else '⬇️ Low' }}</span>
+              {% else %}
+                <span class="tag {{ 'tag-bad' if (bad_thresh > 0 and val > bad_thresh) else ('tag-warn' if (warn_thresh > 0 and val > warn_thresh) else 'tag-ok') }}">
+                  {{ '🔴 High' if (bad_thresh > 0 and val > bad_thresh) else ('🟡 Moderate' if (warn_thresh > 0 and val > warn_thresh) else '✅ OK') }}
+                </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="padding:10px 20px;font-size:.75rem;color:var(--mu);">* Based on average adult daily requirements (2000 kcal diet)</div>
+    </div>
+  </div>
+
+  <!-- ── User profile summary ── -->
+  <div class="scard">
+    <div class="scard-h"><i class="bi bi-person-fill" style="color:#7c3aed;"></i><span>Your Health Profile Used for This Analysis</span></div>
+    <div class="scard-b">
+      <div class="pgrid">
+        <div>
+          <div class="prow"><span class="prow-label">Age</span><span class="prow-val">{{ user_conditions.age }} yrs</span></div>
+          <div class="prow"><span class="prow-label">Weight</span><span class="prow-val">{{ user_conditions.weight }} kg</span></div>
+          <div class="prow"><span class="prow-label">Blood Pressure</span><span class="prow-val">{{ user_conditions.bp }} mmHg</span></div>
+          <div class="prow"><span class="prow-label">Blood Sugar</span><span class="prow-val">{{ user_conditions.sugar_level }} mg/dL</span></div>
+          <div class="prow"><span class="prow-label">Cholesterol</span><span class="prow-val">{{ user_conditions.cholesterol_level }} mg/dL</span></div>
+        </div>
+        <div>
+          <div class="prow" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <span class="prow-label">Conditions</span>
+            <div>
+              {% if user_conditions.diabetes %}<span class="cond-badge">Diabetes</span>{% endif %}
+              {% if user_conditions.hypertension %}<span class="cond-badge">Hypertension</span>{% endif %}
+              {% if user_conditions.cholesterol_condition %}<span class="cond-badge">High Cholesterol</span>{% endif %}
+              {% if user_conditions.heart_disease %}<span class="cond-badge">Heart Disease</span>{% endif %}
+              {% if user_conditions.kidney_disease %}<span class="cond-badge">Kidney Disease</span>{% endif %}
+              {% if user_conditions.pregnancy %}<span class="cond-badge">Pregnant/Lactating</span>{% endif %}
+              {% if not (user_conditions.diabetes or user_conditions.hypertension or user_conditions.cholesterol_condition or user_conditions.heart_disease or user_conditions.kidney_disease or user_conditions.pregnancy) %}
+                <span class="cond-badge none">None reported</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="prow" style="flex-direction:column;align-items:flex-start;gap:8px;">
+            <span class="prow-label">Allergies</span>
+            <div>
+              {% if user_conditions.allergies %}
+                {% for a in user_conditions.allergies %}<span class="cond-badge allergy">{{ a|capitalize }}</span>{% endfor %}
+              {% else %}
+                <span class="cond-badge none">None reported</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="prow"><span class="prow-label">Diet</span><span class="prow-val">{{ user_conditions.diet_preference|replace('_',' ')|title }}</span></div>
+          <div class="prow"><span class="prow-label">Goal</span><span class="prow-val">{{ user_conditions.health_goal|replace('_',' ')|title }}</span></div>
+          <div class="prow"><span class="prow-label">Activity</span><span class="prow-val">{{ user_conditions.activity_level|title }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Action buttons ── -->
+  <div class="actions">
+    <a href="/p/{{ product['id'] }}" class="btn-pr secondary"><i class="bi bi-arrow-left"></i> Back to Product</a>
+    <a href="/" class="btn-pr secondary"><i class="bi bi-upc-scan"></i> Scan Another</a>
+    <a href="/assistant?product={{ product['id'] }}" class="btn-pr primary"><i class="bi bi-robot"></i> Ask AI Assistant</a>
+  </div>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}Messages — Admin{% endblock %}
+{% block content %}
+<style>
+:root{--g:#16a34a;--gd:#15803d;--gl:#f0fdf4;--sf:#f8fafc;--bd:#e2e8f0;--tx:#111827;--mu:#6b7280;--rd:14px;--sh:0 2px 16px rgba(0,0,0,.07);}
+.pg{padding:28px 0 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;color:var(--tx);margin:0 0 3px;}
+.topbar p{color:var(--mu);margin:0;font-size:.84rem;}
+.btn-bk{padding:8px 16px;border-radius:10px;font-size:.83rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--bd);color:var(--tx);background:#fff;transition:all .15s;}
+.btn-bk:hover{border-color:var(--g);color:var(--g);background:var(--gl);}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+.stat{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);padding:15px 18px;box-shadow:var(--sh);display:flex;align-items:center;gap:13px;}
+.stat-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.stat-nm{font-family:"Georgia",serif;font-size:1.45rem;font-weight:700;line-height:1;}
+.stat-lb{font-size:.72rem;color:var(--mu);margin-top:2px;}
+.tcard{background:#fff;border-radius:var(--rd);border:1.5px solid var(--bd);box-shadow:var(--sh);overflow:hidden;}
+.tcard-h{padding:13px 20px;border-bottom:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:space-between;}
+.tcard-h span{font-family:"Syne",sans-serif;font-weight:700;font-size:.87rem;color:var(--tx);}
+.msg-row{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:14px;transition:background .15s;cursor:pointer;}
+.msg-row:last-child{border-bottom:none;}
+.msg-row:hover{background:#fafcff;}
+.msg-row.unread{background:#f0fdf4;border-left:3px solid var(--g);}
+.msg-avatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.9rem;flex-shrink:0;}
+.msg-name{font-weight:700;font-size:.87rem;color:var(--tx);margin-bottom:2px;}
+.msg-subject{font-size:.82rem;font-weight:600;color:var(--tx);margin-bottom:3px;}
+.msg-preview{font-size:.78rem;color:var(--mu);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:480px;}
+.msg-meta{font-size:.72rem;color:var(--mu);white-space:nowrap;margin-left:auto;text-align:right;padding-left:10px;}
+.msg-email{font-size:.75rem;color:var(--mu);margin-bottom:3px;}
+.badge-unread{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:700;}
+.ab{width:29px;height:29px;border-radius:7px;border:1.5px solid var(--bd);background:#fff;color:var(--mu);display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;cursor:pointer;transition:all .15s;text-decoration:none;}
+.ab.r:hover{border-color:#16a34a;color:#16a34a;background:#f0fdf4;}
+.ab.d:hover{border-color:#dc2626;color:#dc2626;background:#fef2f2;}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1050;align-items:center;justify-content:center;padding:20px;}
+.ov.open{display:flex;}
+.mbox{background:#fff;border-radius:20px;width:100%;max-width:600px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:pop .2s ease;overflow:hidden;}
+@keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.mh{padding:18px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd);background:var(--sf);}
+.mh h5{font-family:"Syne",sans-serif;font-weight:800;font-size:.95rem;color:var(--tx);margin:0;}
+.mc{width:30px;height:30px;background:var(--bd);border:none;border-radius:7px;color:var(--tx);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mc:hover{background:#cbd5e1;}
+.mbdy{padding:24px;}
+.meta-row{display:flex;gap:8px;margin-bottom:8px;align-items:baseline;}
+.meta-lbl{font-size:.75rem;font-weight:700;color:var(--mu);width:60px;flex-shrink:0;}
+.meta-val{font-size:.85rem;color:var(--tx);}
+.msg-body-text{background:var(--sf);border:1.5px solid var(--bd);border-radius:10px;padding:16px;font-size:.86rem;color:var(--tx);line-height:1.6;margin-top:14px;white-space:pre-wrap;word-break:break-word;}
+.mft{padding:14px 24px;border-top:1px solid var(--bd);background:var(--sf);display:flex;gap:8px;justify-content:flex-end;}
+.btn-reply{padding:8px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-family:"Syne",sans-serif;font-weight:700;font-size:.84rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn-del{padding:8px 16px;border-radius:10px;border:1.5px solid #fecaca;background:#fef2f2;color:#dc2626;font-size:.84rem;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.fmsg{padding:11px 16px;border-radius:11px;margin-bottom:16px;font-size:.84rem;display:flex;align-items:center;gap:9px;}
+.empty{text-align:center;padding:56px 20px;color:var(--mu);}
+.empty i{font-size:3rem;display:block;margin-bottom:12px;opacity:.3;}
+@media(max-width:600px){.stats{grid-template-columns:1fr;}.msg-preview{display:none;}}
+</style>
+<div class="pg">
+<div class="container-fluid" style="max-width:1100px;padding:0 20px;">
+<div class="topbar">
+  <div><h1>&#128140; Messages</h1><p>Contact form submissions from NutriScan users</p></div>
+  <a href="/admin" class="btn-bk"><i class="bi bi-arrow-left"></i> Dashboard</a>
+</div>
+{% with fmsgs = get_flashed_messages(with_categories=true) %}
+{% if fmsgs %}{% for cat,msg in fmsgs %}
+<div class="fmsg" style="background:{{ '#f0fdf4' if cat=='success' else '#fef2f2' }};border:1px solid {{ '#bbf7d0' if cat=='success' else '#fecaca' }};color:{{ '#15803d' if cat=='success' else '#dc2626' }};">
+  <i class="bi bi-{{ 'check-circle-fill' if cat=='success' else 'exclamation-circle-fill' }}"></i>{{ msg }}
+</div>
+{% endfor %}{% endif %}{% endwith %}
+<div class="stats">
+  <div class="stat"><div class="stat-ic" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-envelope-fill"></i></div><div><div class="stat-nm">{{ messages|length }}</div><div class="stat-lb">Total Messages</div></div></div>
+  <div class="stat"><div class="stat-ic" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-envelope-open-fill"></i></div><div><div class="stat-nm" style="color:#16a34a;">{{ messages|selectattr('is_read','equalto',0)|list|length }}</div><div class="stat-lb">Unread</div></div></div>
+  <div class="stat"><div class="stat-ic" style="background:#f1f5f9;color:#64748b;"><i class="bi bi-check2-all"></i></div><div><div class="stat-nm" style="color:#64748b;">{{ messages|selectattr('is_read','equalto',1)|list|length }}</div><div class="stat-lb">Read</div></div></div>
+</div>
+<div class="tcard">
+  <div class="tcard-h"><span>Inbox</span><small style="color:var(--mu);font-size:.75rem;">{{ messages|length }} messages</small></div>
+  {% set colors = ["#16a34a","#2563eb","#7c3aed","#d97706","#dc2626"] %}
+  {% if messages %}
+  {% for m in messages %}
+  <div class="msg-row {{ 'unread' if m['is_read']==0 else '' }}"
+       data-id="{{ m['id'] }}"
+       data-name="{{ m['name']|e }}"
+       data-email="{{ m['email']|e }}"
+       data-subject="{{ m['subject']|e }}"
+       data-message="{{ m['message']|e }}"
+       data-date="{{ m['sent_at'] or '' }}"
+       data-read="{{ m['is_read'] }}"
+       onclick="openMsg(this)">
+    <div class="msg-avatar" style="background:{{ colors[loop.index0 % 5] }};">{{ m['name'][0].upper() }}</div>
+    <div style="flex:1;min-width:0;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+        <div class="msg-name">{{ m['name'] }}</div>
+        {% if m['is_read']==0 %}<span class="badge-unread">New</span>{% endif %}
+      </div>
+      <div class="msg-email">{{ m['email'] }}</div>
+      <div class="msg-subject">{{ m['subject'] }}</div>
+      <div class="msg-preview">{{ m['message'] }}</div>
+    </div>
+    <div class="msg-meta">
+      <div>{{ m['sent_at'][:10] if m['sent_at'] else '' }}</div>
+      <div style="margin-top:4px;">{{ m['sent_at'][11:16] if m['sent_at'] and m['sent_at']|length > 15 else '' }}</div>
+      <div style="display:flex;gap:4px;margin-top:8px;justify-content:flex-end;" onclick="event.stopPropagation()">
+        {% if m['is_read']==0 %}<a href="/admin/messages/read/{{ m['id'] }}" class="ab r" title="Mark read"><i class="bi bi-check2"></i></a>{% endif %}
+        <a href="/admin/messages/delete/{{ m['id'] }}" class="ab d" title="Delete" onclick="return confirm('Delete this message?')"><i class="bi bi-trash"></i></a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty">
+    <i class="bi bi-inbox"></i>
+    <p style="font-size:.9rem;font-weight:600;color:var(--tx);margin-bottom:4px;">No messages yet</p>
+    <p style="font-size:.82rem;">When users submit the contact form, messages will appear here.</p>
+  </div>
+  {% endif %}
+</div>
+</div>
+</div>
+<!-- Message Modal -->
+<div class="ov" id="msgModal" onclick="if(event.target===this)closeMsg()">
+  <div class="mbox">
+    <div class="mh"><h5><i class="bi bi-envelope-open me-2" style="color:var(--g);"></i><span id="mSubj">Message</span></h5><button class="mc" onclick="closeMsg()"><i class="bi bi-x"></i></button></div>
+    <div class="mbdy">
+      <div class="meta-row"><span class="meta-lbl">From</span><span class="meta-val" id="mName" style="font-weight:700;"></span></div>
+      <div class="meta-row"><span class="meta-lbl">Email</span><span class="meta-val" id="mEmail"></span></div>
+      <div class="meta-row"><span class="meta-lbl">Subject</span><span class="meta-val" id="mSubjBody" style="font-weight:600;"></span></div>
+      <div class="meta-row"><span class="meta-lbl">Sent</span><span class="meta-val" id="mDate" style="color:var(--mu);"></span></div>
+      <div class="msg-body-text" id="mBody"></div>
+    </div>
+    <div class="mft">
+      <a id="mReply" href="#" class="btn-reply"><i class="bi bi-reply-fill"></i> Reply via Email</a>
+      <a id="mDelete" href="#" class="btn-del" onclick="return confirm('Delete this message?')"><i class="bi bi-trash"></i> Delete</a>
+    </div>
+  </div>
+</div>
+<script>
+function openMsg(el) {
+  var id      = el.dataset.id;
+  var name    = el.dataset.name;
+  var email   = el.dataset.email;
+  var subject = el.dataset.subject;
+  var message = el.dataset.message;
+  var date    = el.dataset.date;
+  var isRead  = parseInt(el.dataset.read);
+  document.getElementById("mName").textContent    = name;
+  document.getElementById("mEmail").textContent   = email;
+  document.getElementById("mSubj").textContent    = subject;
+  document.getElementById("mSubjBody").textContent = subject;
+  document.getElementById("mDate").textContent    = date;
+  document.getElementById("mBody").textContent    = message;
+  document.getElementById("mReply").href  = "mailto:" + email + "?subject=Re: " + encodeURIComponent(subject);
+  document.getElementById("mDelete").href = "/admin/messages/delete/" + id;
+  document.getElementById("msgModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (isRead === 0) {
+    fetch("/admin/messages/read/" + id);
+    el.classList.remove("unread");
+    var badge = el.querySelector(".badge-unread");
+    if (badge) badge.remove();
+    el.dataset.read = "1";
+  }
+}
+function closeMsg() {
+  document.getElementById("msgModal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+document.addEventListener("keydown", function(e){ if(e.key==="Escape") closeMsg(); });
+</script>
+{% endblock %}

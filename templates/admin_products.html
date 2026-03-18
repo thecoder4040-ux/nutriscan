@@ -1,0 +1,392 @@
+{% extends "base.html" %}
+{% block title %}Manage Products — Admin{% endblock %}
+{% block content %}
+<style>
+:root{--g:#16a34a;--gd:#15803d;--gl:#f0fdf4;--sf:#f8fafc;--bd:#e2e8f0;--tx:#111827;--mu:#6b7280;--rd:14px;--sh:0 2px 16px rgba(0,0,0,.07);}
+.pg{padding:28px 0 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;color:var(--tx);margin:0 0 3px;}
+.topbar p{color:var(--mu);margin:0;font-size:.84rem;}
+.btn-bk{padding:8px 16px;border-radius:10px;font-size:.83rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--bd);color:var(--tx);background:#fff;transition:all .15s;}
+.btn-bk:hover{border-color:var(--g);color:var(--g);background:var(--gl);}
+.btn-ad{padding:9px 20px;border-radius:10px;font-size:.85rem;font-family:"Syne",sans-serif;font-weight:700;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:transform .15s,box-shadow .2s;}
+.btn-ad:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,163,74,.3);}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);padding:15px 18px;box-shadow:var(--sh);display:flex;align-items:center;gap:13px;}
+.stat-ic{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.stat-nm{font-family:"Georgia",serif;font-size:1.45rem;font-weight:700;line-height:1;}
+.stat-lb{font-size:.72rem;color:var(--mu);margin-top:2px;}
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.sw{position:relative;flex:1;min-width:200px;}
+.sw i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);pointer-events:none;}
+.sw input{width:100%;padding:9px 11px 9px 34px;border:1.5px solid var(--bd);border-radius:10px;font-size:.86rem;background:#fff;outline:none;transition:border-color .2s;}
+.sw input:focus{border-color:var(--g);}
+.fsel{padding:9px 13px;border:1.5px solid var(--bd);border-radius:10px;font-size:.84rem;background:#fff;color:var(--tx);outline:none;cursor:pointer;transition:border-color .2s;}
+.fsel:focus{border-color:var(--g);}
+.tcard{background:#fff;border-radius:var(--rd);border:1.5px solid var(--bd);box-shadow:var(--sh);overflow:hidden;}
+.tcard-h{padding:13px 20px;border-bottom:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:space-between;}
+.tcard-h span{font-family:"Syne",sans-serif;font-weight:700;font-size:.87rem;color:var(--tx);}
+.pt{width:100%;border-collapse:collapse;}
+.pt th{padding:10px 14px;font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);border-bottom:1.5px solid var(--bd);background:var(--sf);text-align:left;white-space:nowrap;}
+.pt td{padding:11px 14px;font-size:.83rem;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.pt tr:last-child td{border-bottom:none;}
+.pt tbody tr:hover{background:#fafcff;}
+.bh{background:#dcfce7;color:#15803d;padding:3px 10px;border-radius:20px;font-size:.71rem;font-weight:700;}
+.br{background:#fee2e2;color:#dc2626;padding:3px 10px;border-radius:20px;font-size:.71rem;font-weight:700;}
+.bai{background:#ede9fe;color:#6d28d9;padding:2px 7px;border-radius:20px;font-size:.68rem;font-weight:700;margin-left:3px;}
+.sc{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-family:"Georgia",serif;font-weight:700;font-size:.78rem;color:#fff;}
+.ab{width:29px;height:29px;border-radius:7px;border:1.5px solid var(--bd);background:#fff;color:var(--mu);display:inline-flex;align-items:center;justify-content:center;font-size:.82rem;cursor:pointer;transition:all .15s;text-decoration:none;}
+.ab.v:hover{border-color:#2563eb;color:#2563eb;background:#eff6ff;}
+.ab.e:hover{border-color:#d97706;color:#d97706;background:#fffbeb;}
+.ab.q:hover{border-color:#16a34a;color:#16a34a;background:#f0fdf4;}
+.ab.d:hover{border-color:#dc2626;color:#dc2626;background:#fef2f2;}
+.fmsg{padding:11px 16px;border-radius:11px;margin-bottom:16px;font-size:.84rem;display:flex;align-items:center;gap:9px;}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:1050;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;}
+.ov.open{display:flex;}
+.mbox{background:#fff;border-radius:20px;width:100%;max-width:760px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:pop .22s ease;margin:auto;}
+.qbox{background:#fff;border-radius:20px;width:100%;max-width:420px;box-shadow:0 24px 60px rgba(0,0,0,.2);animation:pop .22s ease;overflow:hidden;margin:auto;}
+@keyframes pop{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.mh{padding:20px 26px;border-radius:20px 20px 0 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+.mh h4{font-family:"Syne",sans-serif;font-weight:800;color:#fff;margin:0;font-size:1.05rem;}
+.mc{width:31px;height:31px;background:rgba(255,255,255,.2);border:none;border-radius:8px;color:#fff;font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.mc:hover{background:rgba(255,255,255,.35);}
+.mbdy{padding:24px 26px;}
+.sl{font-family:"Syne",sans-serif;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.07em;color:var(--g);margin:20px 0 12px;display:flex;align-items:center;gap:8px;}
+.sl:first-child{margin-top:0;}
+.sl::after{content:"";flex:1;height:1px;background:var(--bd);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
+.fd{display:flex;flex-direction:column;gap:5px;}
+.fd label{font-size:.77rem;font-weight:600;color:#374151;}
+.fd label span{color:#dc2626;}
+.fd input,.fd select{padding:9px 11px;border:1.5px solid var(--bd);border-radius:9px;font-size:.86rem;background:#f9fafb;outline:none;transition:all .2s;width:100%;}
+.fd input:focus,.fd select:focus{border-color:var(--g);background:#fff;box-shadow:0 0 0 3px rgba(22,163,74,.09);}
+.cg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ci{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1.5px solid var(--bd);border-radius:9px;cursor:pointer;font-size:.81rem;transition:all .15s;}
+.ci:has(input:checked){border-color:var(--g);background:var(--gl);color:var(--gd);}
+.ci input{accent-color:var(--g);width:auto;}
+.mft{padding:15px 26px;border-top:1px solid var(--bd);display:flex;gap:10px;justify-content:flex-end;background:var(--sf);border-radius:0 0 20px 20px;}
+.bcn{padding:8px 18px;border-radius:10px;border:1.5px solid var(--bd);background:#fff;color:var(--tx);font-size:.84rem;font-weight:600;cursor:pointer;}
+.bsb{padding:8px 22px;border-radius:10px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-family:"Syne",sans-serif;font-weight:700;font-size:.86rem;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:transform .15s;}
+.bsb:hover{transform:translateY(-1px);}
+@media(max-width:768px){.stats{grid-template-columns:1fr 1fr;}.g2,.g3{grid-template-columns:1fr;}.cg{grid-template-columns:1fr 1fr;}}
+@media(max-width:480px){.stats{grid-template-columns:1fr;}}
+</style>
+
+<div class="pg">
+<div class="container-fluid" style="max-width:1300px;padding:0 20px;">
+
+<div class="topbar">
+  <div>
+    <h1>&#128230; Manage Products</h1>
+    <p>Add, edit and manage all products in the NutriScan database</p>
+  </div>
+  <div style="display:flex;gap:9px;flex-wrap:wrap;">
+    <a href="/admin" class="btn-bk"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    <button class="btn-ad" onclick="openAdd()"><i class="bi bi-plus-circle-fill"></i> Add Product</button>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}{% for cat,msg in messages %}
+<div class="fmsg" style="background:{{ '#f0fdf4' if cat=='success' else '#fef2f2' }};border:1px solid {{ '#bbf7d0' if cat=='success' else '#fecaca' }};color:{{ '#15803d' if cat=='success' else '#dc2626' }};">
+  <i class="bi bi-{{ 'check-circle-fill' if cat=='success' else 'exclamation-circle-fill' }}"></i>{{ msg }}
+</div>
+{% endfor %}{% endif %}{% endwith %}
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat">
+    <div class="stat-ic" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-box-seam-fill"></i></div>
+    <div><div class="stat-nm">{{ products|length }}</div><div class="stat-lb">Total Products</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic" style="background:#dcfce7;color:#16a34a;"><i class="bi bi-heart-fill"></i></div>
+    <div><div class="stat-nm" style="color:#16a34a;">{{ products|selectattr('is_healthy','equalto',1)|list|length }}</div><div class="stat-lb">Healthy</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic" style="background:#fee2e2;color:#dc2626;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+    <div><div class="stat-nm" style="color:#dc2626;">{{ products|selectattr('is_healthy','equalto',0)|list|length }}</div><div class="stat-lb">Risky</div></div>
+  </div>
+  <div class="stat">
+    <div class="stat-ic" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-robot"></i></div>
+    <div><div class="stat-nm" style="color:#7c3aed;">{{ products|selectattr('id','defined')|list|length }}</div><div class="stat-lb">In Database</div></div>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="filters">
+  <div class="sw"><i class="bi bi-search"></i><input type="text" id="si" placeholder="Search name, brand, ID..."></div>
+  <select class="fsel" id="hf">
+    <option value="">All Products</option>
+    <option value="1">&#9989; Healthy</option>
+    <option value="0">&#9888; Risky</option>
+  </select>
+  <select class="fsel" id="cf">
+    <option value="">All Categories</option>
+    <option value="1">Beverages</option>
+    <option value="2">Snacks</option>
+    <option value="3">Dairy</option>
+    <option value="4">Bakery</option>
+    <option value="5">Produce</option>
+  </select>
+  <select class="fsel" id="sf">
+    <option value="name">Name A&#8594;Z</option>
+    <option value="cal">Calories Low&#8594;High</option>
+    <option value="score">Score High&#8594;Low</option>
+  </select>
+</div>
+
+<!-- Table -->
+<div class="tcard">
+  <div class="tcard-h">
+    <span>All Products</span>
+    <small id="rc" style="color:var(--mu);font-size:.75rem;">{{ products|length }} items</small>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="pt">
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Calories</th>
+          <th>Sugar</th>
+          <th>Fat</th>
+          <th>Protein</th>
+          <th>Sodium</th>
+          <th>Score</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="pb">
+        {% for p in products %}
+        <tr
+          data-n="{{ p['name']|lower }}"
+          data-br="{{ (p['brand'] or '')|lower }}"
+          data-i="{{ p['id']|lower }}"
+          data-h="{{ p['is_healthy'] }}"
+          data-c="{{ p['category_id'] or '' }}"
+          data-cal="{{ p['calories'] or 0 }}"
+          data-sc="{{ p['health_score'] or 0 }}">
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              {% if p['image_url'] %}
+              <img src="{{ p['image_url'] }}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;border:1px solid var(--bd);background:#f9fafb;padding:2px;" onerror="this.style.display='none'">
+              {% else %}
+              <div style="width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#16a34a,#15803d);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:.8rem;flex-shrink:0;">{{ p['name'][0].upper() }}</div>
+              {% endif %}
+              <div>
+                <div style="font-weight:700;color:var(--tx);">{{ p['name'] }}</div>
+                <div style="font-size:.72rem;color:var(--mu);">{{ p['brand'] or '&mdash;' }}</div>
+                <code style="font-size:.7rem;background:#f1f5f9;padding:1px 6px;border-radius:4px;color:#475569;">{{ p['id'] }}</code>{% if p['id'].startswith('AI-') %}<span class="bai">AI</span>{% endif %}
+              </div>
+            </div>
+          </td>
+          <td style="font-size:.79rem;color:var(--mu);">
+            {% if p['category_id']==1 %}&#127750; Beverages
+            {% elif p['category_id']==2 %}&#127871; Snacks
+            {% elif p['category_id']==3 %}&#129371; Dairy
+            {% elif p['category_id']==4 %}&#127838; Bakery
+            {% elif p['category_id']==5 %}&#127822; Produce
+            {% else %}&mdash;{% endif %}
+          </td>
+          <td><b style="font-family:Georgia,serif;">{{ (p['calories'] or 0)|int }}</b><span style="font-size:.71rem;color:var(--mu);"> kcal</span></td>
+          <td><b style="font-family:Georgia,serif;{% if (p['sugar_g'] or 0)>20 %}color:#dc2626;{% endif %}">{{ p['sugar_g'] or 0 }}g</b></td>
+          <td><b style="font-family:Georgia,serif;">{{ p['fat_g'] or 0 }}g</b></td>
+          <td><b style="font-family:Georgia,serif;color:#16a34a;">{{ p['protein_g'] or 0 }}g</b></td>
+          <td><b style="font-family:Georgia,serif;{% if (p['sodium_mg'] or 0)>400 %}color:#dc2626;{% endif %}">{{ (p['sodium_mg'] or 0)|int }}mg</b></td>
+          <td>
+            {% set sc = p['health_score'] or 0 %}
+            <div class="sc" style="background:{{ '#16a34a' if sc>=60 else '#f59e0b' if sc>=40 else '#ef4444' }};">{{ sc }}</div>
+          </td>
+          <td>
+            {% if p['is_healthy']==1 %}<span class="bh">&#10003; Healthy</span>
+            {% else %}<span class="br">&#9888; Risky</span>{% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:4px;">
+              <a href="/p/{{ p['id'] }}" target="_blank" class="ab v" title="View"><i class="bi bi-eye"></i></a>
+              <a href="/admin/edit-product/{{ p['id'] }}" class="ab e" title="Edit"><i class="bi bi-pencil"></i></a>
+              <button class="ab q" onclick="genQR('{{ p['id'] }}','{{ p['name']|replace("'","") }}')" title="QR Code"><i class="bi bi-qr-code"></i></button>
+              <a href="/admin/delete-product/{{ p['id'] }}" class="ab d" onclick="return confirm('Delete this product? This cannot be undone.')" title="Delete"><i class="bi bi-trash"></i></a>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="10" style="text-align:center;padding:48px;color:var(--mu);">
+            <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:10px;opacity:.4;"></i>
+            No products found. <button onclick="openAdd()" style="background:none;border:none;color:var(--g);font-weight:700;cursor:pointer;text-decoration:underline;">Add your first product</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+</div>
+
+<!-- ========== ADD PRODUCT MODAL ========== -->
+<div class="ov" id="addMo" onclick="if(event.target===this)closeAdd()">
+  <div class="mbox">
+    <div class="mh" style="background:linear-gradient(135deg,#16a34a,#15803d);">
+      <h4><i class="bi bi-plus-circle-fill me-2"></i>Add New Product</h4>
+      <button class="mc" onclick="closeAdd()"><i class="bi bi-x"></i></button>
+    </div>
+    <form action="/admin/add-product" method="POST">
+    <div class="mbdy">
+
+      <div class="sl"><i class="bi bi-tag"></i> Basic Info</div>
+      <div class="g2">
+        <div class="fd">
+          <label>Product ID <span>*</span></label>
+          <input type="text" name="id" id="newId" required placeholder="e.g. PROD001">
+          <small style="font-size:.71rem;color:var(--mu);">Auto-filled from name, or type manually</small>
+        </div>
+        <div class="fd"><label>Product Name <span>*</span></label><input type="text" name="name" id="newName" required placeholder="e.g. Oreo Biscuits"></div>
+        <div class="fd"><label>Brand</label><input type="text" name="brand" placeholder="e.g. Nabisco"></div>
+        <div class="fd">
+          <label>Category</label>
+          <select name="category_id">
+            <option value="">Select category...</option>
+            <option value="1">&#127750; Beverages</option>
+            <option value="2">&#127871; Snacks</option>
+            <option value="3">&#129371; Dairy</option>
+            <option value="4">&#127838; Bakery</option>
+            <option value="5">&#127822; Produce</option>
+          </select>
+        </div>
+        <div class="fd" style="grid-column:1/-1;"><label>Description</label><input type="text" name="description" placeholder="Short product description"></div>
+      </div>
+
+      <div class="sl"><i class="bi bi-lightning-charge"></i> Nutrition Facts (per serving)</div>
+      <div class="g3">
+        <div class="fd"><label>Calories (kcal) <span>*</span></label><input type="number" name="calories" required min="0" placeholder="0"></div>
+        <div class="fd"><label>Serving Size (g)</label><input type="number" name="serving_size_g" step=".1" min="0" placeholder="100"></div>
+        <div class="fd"><label>Protein (g) <span>*</span></label><input type="number" name="protein" required step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Carbohydrates (g)</label><input type="number" name="carbohydrates_g" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Sugar (g) <span>*</span></label><input type="number" name="sugar" required step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Added Sugar (g)</label><input type="number" name="added_sugar_g" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Fiber (g)</label><input type="number" name="fiber_g" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Total Fat (g) <span>*</span></label><input type="number" name="fat" required step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Saturated Fat (g)</label><input type="number" name="saturated_fat_g" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Trans Fat (g)</label><input type="number" name="trans_fat_g" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Sodium (mg) <span>*</span></label><input type="number" name="sodium" required min="0" placeholder="0"></div>
+        <div class="fd"><label>Cholesterol (mg)</label><input type="number" name="cholesterol_mg" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Potassium (mg)</label><input type="number" name="potassium_mg" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Calcium (mg)</label><input type="number" name="calcium_mg" step=".1" min="0" placeholder="0"></div>
+        <div class="fd"><label>Iron (mg)</label><input type="number" name="iron_mg" step=".1" min="0" placeholder="0"></div>
+      </div>
+
+      <div class="sl"><i class="bi bi-info-circle"></i> Additional Details</div>
+      <div class="g2">
+        <div class="fd" style="grid-column:1/-1;"><label>Ingredients</label><input type="text" name="chemicals" placeholder="Sugar, Wheat Flour, Cocoa Powder..."></div>
+        <div class="fd"><label>Allergen Info</label><input type="text" name="allergen_info" placeholder="Contains Milk, Gluten, Nuts"></div>
+        <div class="fd"><label>Manufacturer</label><input type="text" name="manufacturer" placeholder="e.g. Mondelez International"></div>
+        <div class="fd"><label>Country of Origin</label><input type="text" name="country_of_origin" placeholder="e.g. India"></div>
+        <div class="fd"><label>Health Score (0&#8211;100)</label><input type="number" name="health_score" min="0" max="100" placeholder="50"></div>
+      </div>
+
+      <div class="sl"><i class="bi bi-check-circle"></i> Diet &amp; Health Tags</div>
+      <div class="cg">
+        <label class="ci"><input type="checkbox" name="is_healthy" value="on" checked> &#9989; Healthy Product</label>
+        <label class="ci"><input type="checkbox" name="is_vegan" value="on"> &#127807; Vegan</label>
+        <label class="ci"><input type="checkbox" name="is_vegetarian" value="on"> &#129382; Vegetarian</label>
+        <label class="ci"><input type="checkbox" name="is_gluten_free" value="on"> &#127806; Gluten-Free</label>
+        <label class="ci"><input type="checkbox" name="is_organic" value="on"> &#127807; Organic</label>
+        <label class="ci"><input type="checkbox" name="is_non_gmo" value="on"> &#128300; Non-GMO</label>
+      </div>
+
+    </div>
+    <div class="mft">
+      <button type="button" class="bcn" onclick="closeAdd()">Cancel</button>
+      <button type="submit" class="bsb"><i class="bi bi-plus-circle-fill"></i> Add Product</button>
+    </div>
+    </form>
+  </div>
+</div>
+
+<!-- ========== QR MODAL ========== -->
+<div class="ov" id="qrMo" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="qbox">
+    <div class="mh" style="background:linear-gradient(135deg,#0891b2,#0e7490);">
+      <h4><i class="bi bi-qr-code me-2"></i><span id="qrT">QR Code</span></h4>
+      <button class="mc" onclick="document.getElementById('qrMo').classList.remove('open')"><i class="bi bi-x"></i></button>
+    </div>
+    <div style="padding:28px;text-align:center;">
+      <div id="qrW" style="margin-bottom:14px;min-height:80px;display:flex;align-items:center;justify-content:center;"></div>
+      <div id="qrI" style="font-size:.83rem;color:var(--mu);margin-bottom:16px;"></div>
+      <a id="qrD" class="bsb" style="display:none;text-decoration:none;padding:9px 22px;border-radius:10px;">
+        <i class="bi bi-download"></i> Download PNG
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+function openAdd(){document.getElementById("addMo").classList.add("open");document.body.style.overflow="hidden";}
+function closeAdd(){document.getElementById("addMo").classList.remove("open");document.body.style.overflow="";}
+
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"){closeAdd();document.getElementById("qrMo").classList.remove("open");document.body.style.overflow="";}
+});
+
+// Auto-generate ID from product name
+document.getElementById("newName").addEventListener("input",function(){
+  var f=document.getElementById("newId");
+  if(!f.value){f.value=this.value.substring(0,4).toUpperCase().replace(/[^A-Z]/g,"")+Math.floor(Math.random()*900+100);}
+});
+
+// Live search + filter + sort
+function applyFilters(){
+  var s=document.getElementById("si").value.toLowerCase();
+  var h=document.getElementById("hf").value;
+  var c=document.getElementById("cf").value;
+  var so=document.getElementById("sf").value;
+  var rows=Array.from(document.querySelectorAll("#pb tr[data-n]"));
+  var vis=0;
+  rows.forEach(function(r){
+    var ok=(r.dataset.n.includes(s)||r.dataset.br.includes(s)||r.dataset.i.includes(s))
+           &&(!h||r.dataset.h===h)&&(!c||r.dataset.c===c);
+    r.style.display=ok?"":"none";
+    if(ok)vis++;
+  });
+  rows.filter(function(r){return r.style.display!=="none";})
+    .sort(function(a,b){
+      if(so==="cal")return+a.dataset.cal-+b.dataset.cal;
+      if(so==="score")return+b.dataset.sc-+a.dataset.sc;
+      return a.dataset.n.localeCompare(b.dataset.n);
+    })
+    .forEach(function(r){document.getElementById("pb").appendChild(r);});
+  document.getElementById("rc").textContent=vis+" items";
+}
+["si","hf","cf","sf"].forEach(function(id){
+  var el=document.getElementById(id);
+  el.addEventListener("input",applyFilters);
+  el.addEventListener("change",applyFilters);
+});
+
+// Generate QR code
+function genQR(pid,pname){
+  document.getElementById("qrT").textContent=pname;
+  document.getElementById("qrW").innerHTML="<i class='bi bi-hourglass-split' style='font-size:2rem;color:#9ca3af;'></i>";
+  document.getElementById("qrD").style.display="none";
+  document.getElementById("qrMo").classList.add("open");
+  fetch("/admin/generate-qr/"+pid)
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.error){alert(d.error);return;}
+      document.getElementById("qrW").innerHTML="<img src='data:image/png;base64,"+d.qr_code+"' style='width:100%;max-width:280px;border-radius:10px;'>";
+      document.getElementById("qrI").innerHTML="<strong>"+pname+"</strong><br><small style='color:var(--mu)'>ID: "+pid+"</small>";
+      var dl=document.getElementById("qrD");
+      dl.href="data:image/png;base64,"+d.qr_code;
+      dl.download="qr_"+pid+".png";
+      dl.style.display="inline-flex";
+    })
+    .catch(function(){alert("Failed to generate QR code");});
+}
+</script>
+{% endblock %}

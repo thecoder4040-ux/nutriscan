@@ -1,0 +1,729 @@
+{% extends "base.html" %}
+{% block title %}Create Account — NutriScan{% endblock %}
+
+{% block content %}
+<style>
+    /* ── Page Layout ── */
+    .register-wrapper {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 16px;
+        background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #f0fdf4 100%);
+    }
+
+    .register-card {
+        width: 100%;
+        max-width: 560px;
+        background: #fff;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.10);
+        overflow: hidden;
+    }
+
+    /* ── Header ── */
+    .register-header {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%);
+        padding: 36px 40px 28px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    .register-header::before {
+        content: '';
+        position: absolute;
+        top: -40px; right: -40px;
+        width: 160px; height: 160px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 50%;
+    }
+    .register-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30px; left: -30px;
+        width: 120px; height: 120px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 50%;
+    }
+    .register-header .icon-wrap {
+        width: 64px; height: 64px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 1.8rem;
+        backdrop-filter: blur(10px);
+        border: 1.5px solid rgba(255,255,255,0.25);
+        position: relative; z-index: 1;
+    }
+    .register-header h1 {
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1.6rem;
+        color: #fff;
+        margin-bottom: 6px;
+        position: relative; z-index: 1;
+    }
+    .register-header p {
+        color: rgba(255,255,255,0.8);
+        font-size: 0.88rem;
+        margin: 0;
+        position: relative; z-index: 1;
+    }
+
+    /* ── Form Body ── */
+    .register-body {
+        padding: 32px 40px 36px;
+    }
+
+    /* ── Flash Messages ── */
+    .flash-msg {
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.88rem;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .flash-danger { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .flash-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    /* ── Section Labels ── */
+    .section-label {
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #16a34a;
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: #e2e8f0;
+    }
+
+    /* ── Input Fields ── */
+    .field-group { margin-bottom: 16px; }
+    .field-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 6px;
+        display: block;
+    }
+    .field-label span { color: #dc2626; }
+
+    .input-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        color: #9ca3af;
+        font-size: 1rem;
+        pointer-events: none;
+        z-index: 2;
+    }
+    .field-input {
+        width: 100%;
+        padding: 11px 14px 11px 40px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: #111827;
+        background: #f9fafb;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        outline: none;
+    }
+    .field-input:focus {
+        border-color: #16a34a;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+    }
+    .field-input.is-invalid {
+        border-color: #dc2626;
+        box-shadow: 0 0 0 3px rgba(220,38,38,0.10);
+    }
+    .field-input.is-valid {
+        border-color: #16a34a;
+    }
+    .toggle-pw {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #9ca3af;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 1rem;
+        z-index: 2;
+        transition: color 0.2s;
+    }
+    .toggle-pw:hover { color: #374151; }
+
+    .field-hint {
+        font-size: 0.76rem;
+        color: #9ca3af;
+        margin-top: 5px;
+    }
+    .field-error {
+        font-size: 0.76rem;
+        color: #dc2626;
+        margin-top: 5px;
+        display: none;
+    }
+    .field-error.show { display: block; }
+
+    /* ── Two Column Row ── */
+    .field-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+
+    /* ── Password Strength ── */
+    .strength-wrap { margin-top: 8px; }
+    .strength-bar-bg {
+        height: 5px;
+        background: #e5e7eb;
+        border-radius: 99px;
+        overflow: hidden;
+        margin-bottom: 5px;
+    }
+    .strength-bar {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 0.3s, background 0.3s;
+        width: 0%;
+    }
+    .strength-labels {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .strength-hint { font-size: 0.74rem; color: #9ca3af; }
+    .strength-text { font-size: 0.76rem; font-weight: 700; }
+
+    /* ── Health Profile Accordion ── */
+    .health-toggle {
+        width: 100%;
+        background: #f0fdf4;
+        border: 1.5px solid #bbf7d0;
+        border-radius: 12px;
+        padding: 13px 18px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: #15803d;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: background 0.2s;
+        margin-bottom: 0;
+    }
+    .health-toggle:hover { background: #dcfce7; }
+    .health-toggle .toggle-arrow {
+        transition: transform 0.3s;
+        font-size: 0.8rem;
+    }
+    .health-toggle.open .toggle-arrow { transform: rotate(180deg); }
+
+    .health-panel {
+        display: none;
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        border-top: none;
+        border-radius: 0 0 12px 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+    .health-panel.open { display: block; }
+
+    /* ── Checkbox Grid ── */
+    .condition-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .condition-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s;
+        font-size: 0.82rem;
+        color: #374151;
+    }
+    .condition-item:has(input:checked) {
+        border-color: #16a34a;
+        background: #f0fdf4;
+        color: #15803d;
+    }
+    .condition-item input[type="checkbox"] {
+        accent-color: #16a34a;
+        width: 15px; height: 15px;
+    }
+
+    /* ── Terms ── */
+    .terms-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        margin-bottom: 20px;
+        padding: 14px 16px;
+        background: #f8fafc;
+        border-radius: 12px;
+        border: 1.5px solid #e5e7eb;
+    }
+    .terms-row input[type="checkbox"] {
+        accent-color: #16a34a;
+        width: 16px; height: 16px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+    .terms-row label {
+        font-size: 0.82rem;
+        color: #6b7280;
+        line-height: 1.5;
+        cursor: pointer;
+    }
+    .terms-row label a {
+        color: #16a34a;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    /* ── Submit Button ── */
+    .btn-register {
+        width: 100%;
+        padding: 13px;
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: #fff;
+        border: none;
+        border-radius: 13px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+    .btn-register:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(22,163,74,0.35);
+    }
+    .btn-register:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    /* ── Footer ── */
+    .register-footer {
+        text-align: center;
+        font-size: 0.85rem;
+        color: #9ca3af;
+    }
+    .register-footer a {
+        color: #16a34a;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .register-footer a:hover { text-decoration: underline; }
+
+    .security-note {
+        margin-top: 20px;
+        padding: 10px 16px;
+        background: #f0fdf4;
+        border-radius: 10px;
+        font-size: 0.76rem;
+        color: #15803d;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 500px) {
+        .register-body { padding: 24px 20px 28px; }
+        .register-header { padding: 28px 24px 22px; }
+        .field-row { grid-template-columns: 1fr; }
+        .condition-grid { grid-template-columns: 1fr; }
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-card">
+
+        <!-- Header -->
+        <div class="register-header">
+            <div class="icon-wrap">👤</div>
+            <h1>Create Your Account</h1>
+            <p>Join NutriScan and start making healthier choices</p>
+        </div>
+
+        <!-- Body -->
+        <div class="register-body">
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-msg flash-{{ category }}">
+                    <i class="bi bi-{{ 'x-circle' if category == 'danger' else 'check-circle' }}-fill"></i>
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form id="registerForm" action="/register" method="POST" novalidate>
+
+                <!-- Personal Info -->
+                <div class="section-label"><i class="bi bi-person"></i> Personal Info</div>
+
+                <div class="field-row">
+                    <div class="field-group">
+                        <label class="field-label" for="firstName">First Name <span>*</span></label>
+                        <div class="input-wrap">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" id="firstName" name="firstName"
+                                   class="field-input" placeholder="John" required
+                                   value="{{ request.form.get('firstName', '') }}">
+                        </div>
+                        <div class="field-error" id="err-firstName">Please enter your first name</div>
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label" for="lastName">Last Name <span>*</span></label>
+                        <div class="input-wrap">
+                            <i class="bi bi-person input-icon"></i>
+                            <input type="text" id="lastName" name="lastName"
+                                   class="field-input" placeholder="Doe" required
+                                   value="{{ request.form.get('lastName', '') }}">
+                        </div>
+                        <div class="field-error" id="err-lastName">Please enter your last name</div>
+                    </div>
+                </div>
+
+                <!-- Account Info -->
+                <div class="section-label"><i class="bi bi-envelope"></i> Account Details</div>
+
+                <div class="field-group">
+                    <label class="field-label" for="email">Email Address <span>*</span></label>
+                    <div class="input-wrap">
+                        <i class="bi bi-envelope input-icon"></i>
+                        <input type="email" id="email" name="email"
+                               class="field-input" placeholder="you@example.com" required
+                               value="{{ request.form.get('email', '') }}">
+                    </div>
+                    <div class="field-error" id="err-email">Please enter a valid email address</div>
+                    <div class="field-hint">We'll never share your email with anyone</div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="password">Password <span>*</span></label>
+                    <div class="input-wrap">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input type="password" id="password" name="password"
+                               class="field-input" placeholder="Create a strong password" required>
+                        <button type="button" class="toggle-pw" onclick="togglePw('password', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="strength-wrap">
+                        <div class="strength-bar-bg">
+                            <div class="strength-bar" id="strengthBar"></div>
+                        </div>
+                        <div class="strength-labels">
+                            <span class="strength-hint">Min. 8 characters with letters, numbers & symbols</span>
+                            <span class="strength-text" id="strengthText"></span>
+                        </div>
+                    </div>
+                    <div class="field-error" id="err-password">Password must be at least 8 characters</div>
+                </div>
+
+                <div class="field-group">
+                    <label class="field-label" for="confirmPassword">Confirm Password <span>*</span></label>
+                    <div class="input-wrap">
+                        <i class="bi bi-lock-fill input-icon"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword"
+                               class="field-input" placeholder="Re-enter your password" required>
+                        <button type="button" class="toggle-pw" onclick="togglePw('confirmPassword', this)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
+                    <div class="field-error" id="err-confirm">Passwords do not match</div>
+                </div>
+
+                <!-- Health Profile (Optional) -->
+                <div class="section-label"><i class="bi bi-heart-pulse"></i> Health Profile <span style="font-weight:400;color:#9ca3af;font-size:0.72rem;text-transform:none;letter-spacing:0;">(optional)</span></div>
+
+                <button type="button" class="health-toggle" id="healthToggle" onclick="toggleHealth()">
+                    <span><i class="bi bi-plus-circle me-2"></i>Add your health profile for personalised advice</span>
+                    <i class="bi bi-chevron-down toggle-arrow"></i>
+                </button>
+
+                <div class="health-panel" id="healthPanel">
+                    <div class="field-row" style="margin-bottom:14px;">
+                        <div class="field-group" style="margin-bottom:0;">
+                            <label class="field-label" for="age">Age</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-calendar3 input-icon"></i>
+                                <input type="number" id="age" name="age"
+                                       class="field-input" placeholder="25" min="1" max="120"
+                                       value="{{ request.form.get('age', '') }}">
+                            </div>
+                        </div>
+                        <div class="field-group" style="margin-bottom:0;">
+                            <label class="field-label" for="gender">Gender</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-gender-ambiguous input-icon"></i>
+                                <select id="gender" name="gender" class="field-input" style="padding-left:40px;">
+                                    <option value="">Select</option>
+                                    <option value="male" {% if request.form.get('gender')=='male' %}selected{% endif %}>Male</option>
+                                    <option value="female" {% if request.form.get('gender')=='female' %}selected{% endif %}>Female</option>
+                                    <option value="other" {% if request.form.get('gender')=='other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-row" style="margin-bottom:14px;">
+                        <div class="field-group" style="margin-bottom:0;">
+                            <label class="field-label" for="weight">Weight (kg)</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-speedometer2 input-icon"></i>
+                                <input type="number" id="weight" name="weight_kg"
+                                       class="field-input" placeholder="70" step="0.1" min="20" max="300"
+                                       value="{{ request.form.get('weight', '') }}">
+                            </div>
+                        </div>
+                        <div class="field-group" style="margin-bottom:0;">
+                            <label class="field-label" for="height">Height (cm)</label>
+                            <div class="input-wrap">
+                                <i class="bi bi-rulers input-icon"></i>
+                                <input type="number" id="height" name="height_cm"
+                                       class="field-input" placeholder="170" min="50" max="250"
+                                       value="{{ request.form.get('height', '') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field-group" style="margin-bottom:14px;">
+                        <label class="field-label">Health Conditions</label>
+                        <div class="condition-grid">
+                            <label class="condition-item">
+                                <input type="checkbox" name="diabetes" value="on"> Diabetes
+                            </label>
+                            <label class="condition-item">
+                                <input type="checkbox" name="hypertension" value="on"> Hypertension
+                            </label>
+                            <label class="condition-item">
+                                <input type="checkbox" name="high_cholesterol" value="on"> High Cholesterol
+                            </label>
+                            <label class="condition-item">
+                                <input type="checkbox" name="heart_disease" value="on"> Heart Disease
+                            </label>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!-- Terms -->
+                <div class="terms-row">
+                    <input type="checkbox" id="terms" name="terms" required>
+                    <label for="terms">
+                        I agree to the <a href="#">Terms of Service</a> and
+                        <a href="#">Privacy Policy</a>. I understand that NutriScan provides
+                        general nutritional information and is not a substitute for medical advice.
+                    </label>
+                </div>
+                <div class="field-error" id="err-terms" style="margin-top:-12px;margin-bottom:14px;">
+                    You must accept the terms to continue
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-register" id="submitBtn">
+                    <i class="bi bi-person-check-fill"></i> Create Account
+                </button>
+
+                <!-- Login Link -->
+                <div class="register-footer">
+                    Already have an account? <a href="/login">Sign in here</a>
+                </div>
+
+                <div class="security-note">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    Your data is encrypted and stored securely
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── Toggle password visibility ──
+function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+
+// ── Toggle health panel ──
+function toggleHealth() {
+    const panel  = document.getElementById('healthPanel');
+    const toggle = document.getElementById('healthToggle');
+    panel.classList.toggle('open');
+    toggle.classList.toggle('open');
+}
+
+// ── Password strength ──
+document.getElementById('password').addEventListener('input', function() {
+    const pw  = this.value;
+    const bar = document.getElementById('strengthBar');
+    const txt = document.getElementById('strengthText');
+
+    let score = 0;
+    if (pw.length >= 8)  score += 25;
+    if (pw.length >= 12) score += 10;
+    if (/[a-z]/.test(pw)) score += 15;
+    if (/[A-Z]/.test(pw)) score += 15;
+    if (/[0-9]/.test(pw)) score += 15;
+    if (/[^a-zA-Z0-9]/.test(pw)) score += 20;
+    score = Math.min(score, 100);
+
+    let color, label;
+    if (score >= 80) { color = '#16a34a'; label = 'Very Strong'; }
+    else if (score >= 60) { color = '#22c55e'; label = 'Strong'; }
+    else if (score >= 40) { color = '#f59e0b'; label = 'Medium'; }
+    else if (score >= 20) { color = '#ef4444'; label = 'Weak'; }
+    else { color = '#dc2626'; label = 'Very Weak'; }
+
+    bar.style.width  = score + '%';
+    bar.style.background = color;
+    txt.textContent  = pw ? label : '';
+    txt.style.color  = color;
+});
+
+// ── Real-time confirm password ──
+document.getElementById('confirmPassword').addEventListener('input', function() {
+    const pw  = document.getElementById('password').value;
+    const err = document.getElementById('err-confirm');
+    if (this.value && this.value !== pw) {
+        this.classList.add('is-invalid');
+        err.classList.add('show');
+    } else {
+        this.classList.remove('is-invalid');
+        err.classList.remove('show');
+    }
+});
+
+// ── Real-time email ──
+document.getElementById('email').addEventListener('blur', function() {
+    const err = document.getElementById('err-email');
+    const ok  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+    if (this.value && !ok) {
+        this.classList.add('is-invalid');
+        err.classList.add('show');
+    } else {
+        this.classList.remove('is-invalid');
+        err.classList.remove('show');
+    }
+});
+
+// ── Form submission ──
+document.getElementById('registerForm').addEventListener('submit', function(e) {
+    let valid = true;
+
+    // First name
+    const fn = document.getElementById('firstName');
+    if (!fn.value.trim()) {
+        fn.classList.add('is-invalid');
+        document.getElementById('err-firstName').classList.add('show');
+        valid = false;
+    } else {
+        fn.classList.remove('is-invalid');
+        document.getElementById('err-firstName').classList.remove('show');
+    }
+
+    // Last name
+    const ln = document.getElementById('lastName');
+    if (!ln.value.trim()) {
+        ln.classList.add('is-invalid');
+        document.getElementById('err-lastName').classList.add('show');
+        valid = false;
+    } else {
+        ln.classList.remove('is-invalid');
+        document.getElementById('err-lastName').classList.remove('show');
+    }
+
+    // Email
+    const em  = document.getElementById('email');
+    const emOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value);
+    if (!emOk) {
+        em.classList.add('is-invalid');
+        document.getElementById('err-email').classList.add('show');
+        valid = false;
+    }
+
+    // Password
+    const pw = document.getElementById('password');
+    if (pw.value.length < 8) {
+        pw.classList.add('is-invalid');
+        document.getElementById('err-password').classList.add('show');
+        valid = false;
+    } else {
+        pw.classList.remove('is-invalid');
+        document.getElementById('err-password').classList.remove('show');
+    }
+
+    // Confirm password
+    const cp = document.getElementById('confirmPassword');
+    if (cp.value !== pw.value) {
+        cp.classList.add('is-invalid');
+        document.getElementById('err-confirm').classList.add('show');
+        valid = false;
+    }
+
+    // Terms
+    const terms = document.getElementById('terms');
+    if (!terms.checked) {
+        document.getElementById('err-terms').classList.add('show');
+        valid = false;
+    } else {
+        document.getElementById('err-terms').classList.remove('show');
+    }
+
+    if (!valid) { e.preventDefault(); return; }
+
+    // Show loading state
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creating Account...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

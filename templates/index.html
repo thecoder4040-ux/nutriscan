@@ -1,0 +1,790 @@
+{% extends "base.html" %}
+
+{% block title %}NutriScan — Smart Nutrition Analysis{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Hero ── */
+    .hero {
+        background: linear-gradient(135deg, var(--green-dim) 0%, var(--green) 60%, #1db367 100%);
+        border-radius: 24px;
+        padding: 56px 48px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 32px;
+    }
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: -60px; right: -60px;
+        width: 260px; height: 260px;
+        background: rgba(255,255,255,0.06);
+        border-radius: 50%;
+    }
+    .hero::after {
+        content: '';
+        position: absolute;
+        bottom: -80px; right: 120px;
+        width: 180px; height: 180px;
+        background: rgba(240,255,68,0.08);
+        border-radius: 50%;
+    }
+    .hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 800;
+        line-height: 1.15;
+        margin-bottom: 14px;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.05rem; color: rgba(255,255,255,0.85); max-width: 480px; }
+    .hero-stats {
+        display: flex;
+        gap: 28px;
+        margin-top: 28px;
+        flex-wrap: wrap;
+    }
+    .hero-stat { text-align: center; }
+    .hero-stat .num {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--accent);
+        line-height: 1;
+    }
+    .hero-stat .label {
+        font-size: 0.75rem;
+        color: rgba(255,255,255,0.7);
+        margin-top: 2px;
+    }
+    .hero-emoji {
+        position: absolute;
+        right: 48px; top: 50%;
+        transform: translateY(-50%);
+        font-size: 7rem;
+        opacity: 0.18;
+        user-select: none;
+    }
+
+    /* ── Section label ── */
+    .section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--green);
+        margin-bottom: 6px;
+    }
+
+    /* ── Search card ── */
+    .search-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: var(--shadow);
+        height: 100%;
+    }
+    .search-card h5 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 18px;
+        display: flex;
+        align-items: center;
+        gap: 9px;
+    }
+    .search-card h5 .icon-wrap {
+        width: 34px; height: 34px;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+    .icon-green { background: #dcfce7; color: var(--green); }
+    .icon-blue  { background: #dbeafe; color: #2563eb; }
+    .icon-purple{ background: #ede9fe; color: #7c3aed; }
+    .icon-orange{ background: #ffedd5; color: #ea580c; }
+
+    /* Search input */
+    .search-wrap {
+        position: relative;
+    }
+    .search-input {
+        width: 100%;
+        padding: 12px 120px 12px 16px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-size: 0.92rem;
+        font-family: 'DM Sans', sans-serif;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: var(--surface2);
+    }
+    .search-input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(26,158,92,0.12);
+        background: #fff;
+    }
+    .search-btn {
+        position: absolute;
+        right: 5px; top: 5px; bottom: 5px;
+        background: var(--green);
+        color: #fff;
+        border: none;
+        border-radius: 9px;
+        padding: 0 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: 'DM Sans', sans-serif;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+    .search-btn:hover { background: var(--green-dim); }
+
+    /* Autocomplete dropdown */
+    .autocomplete-box {
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0; right: 0;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        z-index: 9999;
+        display: none;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .ac-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        transition: background 0.15s;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover { background: var(--surface2); }
+    .ac-item .ac-name { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+    .ac-item .ac-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 1px; }
+    .ac-badge {
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 20px;
+        flex-shrink: 0;
+    }
+    .ac-badge.healthy { background: #dcfce7; color: #15803d; }
+    .ac-badge.risky   { background: #fee2e2; color: #dc2626; }
+
+    /* ── QR Scanner ── */
+    .qr-zone {
+        border: 2px dashed var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        text-align: center;
+        transition: border-color 0.2s, background 0.2s;
+        background: var(--surface2);
+        cursor: pointer;
+    }
+    .qr-zone.active {
+        border-color: var(--green);
+        border-style: solid;
+        background: #f0fdf4;
+    }
+    .qr-zone .qr-icon { font-size: 2.8rem; margin-bottom: 10px; opacity: 0.6; }
+    #qr-video-wrap {
+        position: relative;
+        display: none;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #000;
+    }
+    #qr-video {
+        width: 100%;
+        display: block;
+        border-radius: 14px;
+    }
+    #qr-scan-line {
+        position: absolute;
+        left: 0; right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        animation: scanLine 2s linear infinite;
+        box-shadow: 0 0 8px var(--accent);
+    }
+    @keyframes scanLine {
+        0%   { top: 10%; }
+        100% { top: 90%; }
+    }
+    #qr-corner {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+    #qr-corner::before, #qr-corner::after,
+    #qr-corner span::before, #qr-corner span::after {
+        content: '';
+        position: absolute;
+        width: 22px; height: 22px;
+        border-color: var(--accent);
+        border-style: solid;
+    }
+    #qr-corner::before  { top: 14px; left: 14px; border-width: 3px 0 0 3px; }
+    #qr-corner::after   { top: 14px; right: 14px; border-width: 3px 3px 0 0; }
+    #qr-corner span::before { bottom: 14px; left: 14px; border-width: 0 0 3px 3px; }
+    #qr-corner span::after  { bottom: 14px; right: 14px; border-width: 0 3px 3px 0; }
+
+    .scan-status {
+        margin-top: 10px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .scan-dot {
+        width: 8px; height: 8px;
+        background: var(--green);
+        border-radius: 50%;
+        animation: pulse 1.2s infinite;
+    }
+
+    /* ── Compare ── */
+    .vs-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .vs-circle {
+        width: 36px; height: 36px;
+        background: var(--green);
+        color: #fff;
+        border-radius: 50%;
+        font-weight: 800;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Syne', sans-serif;
+    }
+
+    /* ── Sample products ── */
+    .product-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        background: var(--surface2);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: border-color 0.2s, background 0.2s, transform 0.15s;
+        text-decoration: none;
+        color: var(--text);
+    }
+    .product-chip:hover {
+        border-color: var(--green);
+        background: #f0fdf4;
+        transform: translateY(-2px);
+        color: var(--text);
+    }
+    .product-chip .chip-icon {
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+    .product-chip .chip-name { font-weight: 600; font-size: 0.88rem; }
+    .product-chip .chip-id   { font-size: 0.72rem; color: var(--text-muted); }
+    .chip-badge {
+        margin-left: auto;
+        font-size: 0.68rem;
+        font-weight: 700;
+        padding: 3px 9px;
+        border-radius: 20px;
+        flex-shrink: 0;
+    }
+    .chip-healthy { background: #dcfce7; color: #15803d; }
+    .chip-risky   { background: #fee2e2; color: #dc2626; }
+
+    /* ── Features strip ── */
+    .feature-strip {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    .feature-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px 16px;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .feature-item:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+    .feature-item .fi { font-size: 2rem; margin-bottom: 8px; }
+    .feature-item h6 { font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
+    .feature-item p  { font-size: 0.76rem; color: var(--text-muted); margin: 0; }
+
+    @media (max-width: 768px) {
+        .hero { padding: 36px 24px; }
+        .hero-emoji { display: none; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ Hero ══ -->
+<div class="hero" id="home">
+    <div class="hero-emoji">🥗</div>
+    <div class="section-label" style="color:var(--accent);">Smart Nutrition</div>
+    <h1>Know What's In<br><span>Your Food</span></h1>
+    <p>Scan QR codes, search products, and get instant AI-powered nutrition analysis tailored to your health profile.</p>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <div class="num">10+</div>
+            <div class="label">Products</div>
+        </div>
+        <div class="hero-stat">
+            <div class="num">AI</div>
+            <div class="label">Powered</div>
+        </div>
+        <div class="hero-stat">
+            <div class="num">Free</div>
+            <div class="label">Always</div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Feature Strip ══ -->
+<div class="feature-strip">
+    <div class="feature-item">
+        <div class="fi">🔍</div>
+        <h6>Search & Scan</h6>
+        <p>Find any product instantly</p>
+    </div>
+    <div class="feature-item">
+        <div class="fi">🤖</div>
+        <h6>AI Analysis</h6>
+        <p>Personalized health advice</p>
+    </div>
+    <div class="feature-item">
+        <div class="fi">⚖️</div>
+        <h6>Compare</h6>
+        <p>Side-by-side comparison</p>
+    </div>
+    <div class="feature-item">
+        <div class="fi">🏥</div>
+        <h6>Health Aware</h6>
+        <p>Knows your conditions</p>
+    </div>
+    <div class="feature-item">
+        <div class="fi">⚠️</div>
+        <h6>Allergy Alerts</h6>
+        <p>Auto allergen warnings</p>
+    </div>
+</div>
+
+<!-- ══ Main Tools Row ══ -->
+<div class="row g-4 mb-4" id="manual-lookup">
+
+    <!-- Search -->
+    <div class="col-lg-6">
+        <div class="search-card">
+            <h5>
+                <span class="icon-wrap icon-green"><i class="bi bi-search"></i></span>
+                Search Product
+            </h5>
+            <div class="search-wrap" id="main-search-wrap">
+                <input type="text" id="productId" class="search-input"
+                       placeholder="Type product name or ID (e.g. Apple, PROD001)..."
+                       autocomplete="off">
+                <button class="search-btn" onclick="checkProduct()">
+                    <i class="bi bi-arrow-right"></i> Go
+                </button>
+                <div class="autocomplete-box" id="main-ac"></div>
+            </div>
+            <div class="mt-2">
+                <small class="text-muted">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    Try: "Apple", "Pepsi", "Greek Yogurt" or a product ID
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Scanner -->
+    <div class="col-lg-6" id="qr-scanner">
+        <div class="search-card">
+            <h5>
+                <span class="icon-wrap icon-blue"><i class="bi bi-qr-code-scan"></i></span>
+                QR Code Scanner
+            </h5>
+
+            <!-- Idle state -->
+            <div class="qr-zone" id="qr-idle" onclick="startQR()">
+                <div class="qr-icon">📷</div>
+                <div style="font-weight:600; font-size:0.92rem; margin-bottom:4px;">Tap to Start Camera</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Point at any product QR code to scan instantly</div>
+            </div>
+
+            <!-- Active scanner -->
+            <div id="qr-video-wrap">
+                <video id="qr-video" playsinline autoplay muted></video>
+                <div id="qr-scan-line"></div>
+                <div id="qr-corner"><span></span></div>
+                <canvas id="qr-canvas" style="display:none;"></canvas>
+            </div>
+
+            <div id="qr-status" class="scan-status" style="display:none;">
+                <div class="scan-dot"></div>
+                <span id="qr-status-text">Scanning for QR code...</span>
+            </div>
+
+            <div id="qr-result" class="mt-2"></div>
+
+            <button id="qr-stop-btn" class="btn btn-sm btn-outline-danger mt-2 w-100"
+                    style="display:none; border-radius:9px;" onclick="stopQR()">
+                <i class="bi bi-stop-circle"></i> Stop Scanner
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Compare Row ══ -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="search-card">
+            <h5>
+                <span class="icon-wrap icon-purple"><i class="bi bi-bar-chart-line"></i></span>
+                Compare Two Products
+            </h5>
+            <div class="row align-items-center g-3">
+                <div class="col-md-5">
+                    <div class="search-wrap">
+                        <input type="text" id="compare1" class="search-input"
+                               placeholder="First product..." autocomplete="off">
+                        <div class="autocomplete-box" id="compare1-ac"></div>
+                    </div>
+                </div>
+                <div class="col-md-2 vs-divider">
+                    <div class="vs-circle">VS</div>
+                </div>
+                <div class="col-md-5">
+                    <div class="search-wrap">
+                        <input type="text" id="compare2" class="search-input"
+                               placeholder="Second product..." autocomplete="off">
+                        <div class="autocomplete-box" id="compare2-ac"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-3">
+                <button class="btn btn-primary px-4" onclick="compareProducts()">
+                    <i class="bi bi-bar-chart me-1"></i> Compare Now
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ Sample Products ══ -->
+<div class="mb-2 section-label">Quick Access Products</div>
+<div class="row g-3 mb-5">
+    {% set samples = [
+        ('PROD001', 'Apple',         '🍎', 1),
+        ('PROD002', 'Whole Wheat Bread', '🍞', 1),
+        ('PROD003', 'Greek Yogurt',  '🥛', 1),
+        ('PROD004', 'Potato Chips',  '🥔', 0),
+        ('PROD005', 'Pepsi Regular', '🥤', 0),
+        ('PROD006', 'Pepsi Zero',    '🥤', 1),
+        ('PROD007', 'Dark Chocolate','🍫', 1),
+        ('PROD008', 'Mixed Nuts',    '🥜', 1),
+        ('PROD009', 'Orange Juice',  '🍊', 1),
+        ('PROD010', 'Mineral Water', '💧', 1)
+    ] %}
+    {% for id, name, emoji, healthy in samples %}
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+        <a href="/p/{{ id }}" class="product-chip">
+            <div class="chip-icon">{{ emoji }}</div>
+            <div>
+                <div class="chip-name">{{ name }}</div>
+                <div class="chip-id">{{ id }}</div>
+            </div>
+            <span class="chip-badge {% if healthy %}chip-healthy{% else %}chip-risky{% endif %}">
+                {% if healthy %}✓{% else %}!{% endif %}
+            </span>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<!-- jsQR — real QR code decoder that runs in the browser -->
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" async></script>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AUTOCOMPLETE
+// ═══════════════════════════════════════════════
+const acConfigs = [
+    { inputId: 'productId',  dropId: 'main-ac',    onSelect: (id) => { window.location.href = '/p/' + id; } },
+    { inputId: 'compare1',   dropId: 'compare1-ac', onSelect: null },
+    { inputId: 'compare2',   dropId: 'compare2-ac', onSelect: null },
+];
+
+acConfigs.forEach(cfg => {
+    const input = document.getElementById(cfg.inputId);
+    const drop  = document.getElementById(cfg.dropId);
+    if (!input || !drop) return;
+
+    let timer = null;
+
+    input.addEventListener('input', () => {
+        clearTimeout(timer);
+        const q = input.value.trim();
+        if (q.length < 1) { drop.style.display = 'none'; return; }
+        timer = setTimeout(() => fetchAC(q, input, drop, cfg.onSelect), 280);
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (cfg.inputId === 'productId') checkProduct();
+        }
+        if (e.key === 'Escape') drop.style.display = 'none';
+    });
+
+    input.addEventListener('blur', () => {
+        setTimeout(() => { drop.style.display = 'none'; }, 200);
+    });
+    input.addEventListener('focus', () => {
+        if (input.value.trim().length > 0) input.dispatchEvent(new Event('input'));
+    });
+});
+
+function fetchAC(q, input, drop, onSelect) {
+    fetch('/api/autocomplete?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => renderAC(data, input, drop, onSelect))
+        .catch(() => { drop.style.display = 'none'; });
+}
+
+function renderAC(results, input, drop, onSelect) {
+    if (!results.length) { drop.style.display = 'none'; return; }
+
+    drop.innerHTML = results.map(p => {
+        const isAI = p.source === 'ai';
+        const navId = isAI ? encodeURIComponent(p.name) : p.id;
+        const metaText = isAI
+            ? `${p.brand ? p.brand + ' · ' : ''}${p.calories ? p.calories + ' kcal (AI estimate)' : 'AI suggestion'}`
+            : `${p.id} · ${p.calories} kcal${p.brand ? ' · ' + p.brand : ''}`;
+        return `
+        <div class="ac-item" onmousedown="selectAC(event,'${navId}','${p.name.replace(/'/g,"\\'")}','${input.id}','${isAI}')">
+            <div style="flex:1; min-width:0;">
+                <div class="ac-name" style="display:flex;align-items:center;gap:6px;">
+                    ${p.name}
+                    ${isAI ? '<span style="font-size:0.65rem;background:#ede9fe;color:#6d28d9;padding:1px 7px;border-radius:20px;font-weight:700;flex-shrink:0;">🤖 AI</span>' : ''}
+                </div>
+                <div class="ac-meta">${metaText}</div>
+            </div>
+            ${!isAI ? `<span class="ac-badge ${p.is_healthy ? 'healthy' : 'risky'}">${p.is_healthy ? 'Healthy' : 'Risky'}</span>` : ''}
+        </div>`;
+    }).join('');
+    drop.style.display = 'block';
+}
+
+function selectAC(e, id, name, inputId, isAI) {
+    e.preventDefault();
+    const input = document.getElementById(inputId);
+    input.value = name;
+    // For AI suggestions store the name as pid so it navigates to /p/<name>
+    input.setAttribute('data-pid', isAI === 'true' ? encodeURIComponent(name) : id);
+
+    const cfg = acConfigs.find(c => c.inputId === inputId);
+    const drop = document.getElementById(cfg.dropId);
+    drop.style.display = 'none';
+
+    if (cfg.onSelect) cfg.onSelect(isAI === 'true' ? encodeURIComponent(name) : id);
+}
+
+// ═══════════════════════════════════════════════
+//  PRODUCT LOOKUP
+// ═══════════════════════════════════════════════
+function checkProduct() {
+    const input = document.getElementById('productId');
+    const pid   = input.getAttribute('data-pid') || input.value.trim();
+    if (!pid) { showToast('Please enter or select a product', 'warning'); return; }
+    window.location.href = '/p/' + encodeURIComponent(pid);
+}
+
+// ═══════════════════════════════════════════════
+//  COMPARE
+// ═══════════════════════════════════════════════
+function compareProducts() {
+    const get = (id) => {
+        const el = document.getElementById(id);
+        return el.getAttribute('data-pid') || el.value.trim();
+    };
+    const p1 = get('compare1'), p2 = get('compare2');
+    if (!p1 || !p2) { showToast('Please select both products', 'warning'); return; }
+    if (p1 === p2)  { showToast('Please select two different products', 'warning'); return; }
+    window.location.href = `/compare/${encodeURIComponent(p1)}/vs/${encodeURIComponent(p2)}`;
+}
+
+// ═══════════════════════════════════════════════
+//  QR SCANNER — uses jsQR for real detection
+// ═══════════════════════════════════════════════
+let qrStream     = null;
+let qrAnimFrame  = null;
+let qrDetected   = false;
+
+function startQR() {
+    const idle     = document.getElementById('qr-idle');
+    const videoWrap= document.getElementById('qr-video-wrap');
+    const video    = document.getElementById('qr-video');
+    const statusEl = document.getElementById('qr-status');
+    const stopBtn  = document.getElementById('qr-stop-btn');
+    const result   = document.getElementById('qr-result');
+
+    result.innerHTML = '';
+    qrDetected = false;
+
+    navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    })
+    .then(stream => {
+        qrStream = stream;
+        video.srcObject = stream;
+        video.play();
+
+        idle.style.display = 'none';
+        videoWrap.style.display = 'block';
+        statusEl.style.display  = 'flex';
+        stopBtn.style.display   = 'block';
+
+        video.addEventListener('loadedmetadata', () => {
+            scanFrame(video, result);
+        });
+    })
+    .catch(err => {
+        result.innerHTML = `
+            <div class="alert alert-warning mt-2" style="border-radius:12px; font-size:0.85rem;">
+                <i class="bi bi-camera-video-off me-2"></i>
+                <strong>Camera Error:</strong> ${err.message || 'Permission denied'}
+                <br><small>Please allow camera access or use manual search above.</small>
+            </div>`;
+    });
+}
+
+function scanFrame(video, resultEl) {
+    if (qrDetected) return;
+
+    const canvas = document.getElementById('qr-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    let imageData;
+    try {
+        imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    } catch(e) {
+        qrAnimFrame = requestAnimationFrame(() => scanFrame(video, resultEl));
+        return;
+    }
+
+    if (typeof jsQR === 'undefined') {
+        qrAnimFrame = requestAnimationFrame(() => scanFrame(video, resultEl));
+        return;
+    }
+    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: 'dontInvert'
+    });
+
+    if (code) {
+        qrDetected = true;
+        stopQR();
+        handleQRResult(code.data, resultEl);
+    } else {
+        qrAnimFrame = requestAnimationFrame(() => scanFrame(video, resultEl));
+    }
+}
+
+function handleQRResult(data, resultEl) {
+    document.getElementById('qr-status-text').textContent = '✅ QR Code Detected!';
+
+    // Extract product ID from URL or use raw data
+    let productId = data;
+
+    // If it's a URL like /p/PROD001 or https://site.com/p/PROD001
+    const urlMatch = data.match(/\/p\/([A-Za-z0-9_-]+)/);
+    if (urlMatch) productId = urlMatch[1];
+
+    // Show success UI
+    resultEl.innerHTML = `
+        <div style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px; padding:14px; margin-top:10px;">
+            <div style="font-weight:700; color:#15803d; margin-bottom:6px;">
+                <i class="bi bi-check-circle-fill me-2"></i>QR Code Scanned!
+            </div>
+            <div style="font-size:0.82rem; color:#166534; margin-bottom:10px; word-break:break-all;">
+                Detected: <code>${data}</code>
+            </div>
+            <a href="/p/${encodeURIComponent(productId)}"
+               class="btn btn-sm btn-primary w-100"
+               style="border-radius:9px;">
+                <i class="bi bi-arrow-right me-1"></i> View Product Info
+            </a>
+        </div>`;
+
+    // Auto-redirect after 2 seconds
+    setTimeout(() => {
+        window.location.href = '/p/' + encodeURIComponent(productId);
+    }, 2000);
+}
+
+function stopQR() {
+    if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+    if (qrStream)    { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+
+    const video    = document.getElementById('qr-video');
+    if (video) video.srcObject = null;
+
+    document.getElementById('qr-idle').style.display      = 'block';
+    document.getElementById('qr-video-wrap').style.display = 'none';
+    document.getElementById('qr-status').style.display    = 'none';
+    document.getElementById('qr-stop-btn').style.display  = 'none';
+}
+
+window.addEventListener('beforeunload', stopQR);
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, type='info') {
+    const el = document.createElement('div');
+    el.style.cssText = `
+        position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+        background:${type==='warning'?'#92400e':'#1a9e5c'};
+        color:#fff; padding:10px 22px; border-radius:30px;
+        font-size:0.88rem; font-weight:600; z-index:9999;
+        box-shadow:0 4px 20px rgba(0,0,0,0.2);
+        animation: fadeUp 0.3s ease;
+    `;
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
+}
+</script>
+{% endblock %}

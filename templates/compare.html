@@ -1,0 +1,864 @@
+{% extends "base.html" %}
+{% block title %}Compare Products — NutriScan{% endblock %}
+
+{% block content %}
+<style>
+/* ── Variables ── */
+:root {
+    --green:   #16a34a;
+    --green-l: #f0fdf4;
+    --red:     #dc2626;
+    --red-l:   #fef2f2;
+    --amber:   #d97706;
+    --amber-l: #fffbeb;
+    --blue:    #2563eb;
+    --surface: #f8fafc;
+    --border:  #e2e8f0;
+    --text:    #111827;
+    --muted:   #6b7280;
+    --radius:  16px;
+}
+
+/* ── Page ── */
+.compare-page { padding: 32px 0 60px; }
+
+/* ── Hero Header ── */
+.compare-hero {
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 60%, #166534 100%);
+    border-radius: 24px;
+    padding: 36px 40px 32px;
+    color: #fff;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+}
+.compare-hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 50%;
+}
+.compare-hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    margin: 0 0 6px;
+    position: relative; z-index: 1;
+}
+.compare-hero p {
+    color: rgba(255,255,255,0.8);
+    margin: 0;
+    font-size: 0.95rem;
+    position: relative; z-index: 1;
+}
+
+/* ── Search Section ── */
+.search-section {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.search-section h5 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--green);
+    margin-bottom: 18px;
+    display: flex; align-items: center; gap: 8px;
+}
+.search-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 16px;
+    align-items: end;
+}
+.vs-badge {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+.search-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+}
+.search-input-wrap { position: relative; }
+.search-input-wrap input {
+    width: 100%;
+    padding: 11px 16px 11px 42px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.9rem;
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-input-wrap input:focus {
+    border-color: var(--green);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(22,163,74,0.12);
+}
+.search-input-wrap .s-icon {
+    position: absolute; left: 13px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted); font-size: 1rem;
+    pointer-events: none;
+}
+
+/* Autocomplete dropdown */
+.autocomplete-box {
+    position: absolute;
+    top: calc(100% + 4px); left: 0; right: 0;
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    z-index: 999;
+    display: none;
+    overflow: hidden;
+    max-height: 320px;
+    overflow-y: auto;
+}
+.ac-item {
+    padding: 11px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    transition: background 0.15s;
+}
+.ac-item:hover { background: #f0fdf4; }
+.ac-item:last-child { border-bottom: none; }
+.ac-name { font-weight: 600; font-size: 0.88rem; color: var(--text); }
+.ac-meta { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+.ac-badge {
+    font-size: 0.7rem;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.ac-badge.healthy { background: #dcfce7; color: #15803d; }
+.ac-badge.risky   { background: #fee2e2; color: #dc2626; }
+
+.btn-compare {
+    padding: 11px 28px;
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.2s;
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+}
+.btn-compare:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(22,163,74,0.3); }
+
+/* ── AI Badge ── */
+.ai-tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: #fef9c3; color: #92400e;
+    border: 1px solid #fde68a;
+    border-radius: 20px;
+    font-size: 0.7rem; font-weight: 700;
+    padding: 2px 10px;
+}
+
+/* ── Product Headers ── */
+.product-headers {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+.ph-label { /* empty corner */ }
+.ph-card {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+    border-radius: 16px 16px 0 0;
+    padding: 20px 24px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.ph-card.p2 {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+.ph-img {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    object-fit: contain;
+    padding: 4px;
+    flex-shrink: 0;
+}
+.ph-letter {
+    width: 64px; height: 64px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem; font-weight: 800;
+    color: rgba(255,255,255,0.9);
+    flex-shrink: 0;
+}
+.ph-info h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    margin: 0 0 4px;
+}
+.ph-info .ph-brand { font-size: 0.78rem; opacity: 0.85; }
+.ph-score {
+    margin-left: auto;
+    text-align: center;
+    flex-shrink: 0;
+}
+.ph-score .score-num {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.6rem; font-weight: 700;
+    line-height: 1;
+}
+.ph-score .score-lbl { font-size: 0.68rem; opacity: 0.8; }
+
+/* ── Comparison Table ── */
+.compare-table-wrap {
+    border-radius: 0 0 16px 16px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    margin-bottom: 28px;
+}
+.compare-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+}
+.compare-row:last-child { border-bottom: none; }
+.compare-row:hover { background: #fafafa; }
+.compare-row.section-head {
+    background: #f8fafc;
+}
+.cr-label {
+    padding: 14px 20px;
+    font-weight: 700;
+    font-size: 0.83rem;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+    background: #f8fafc;
+}
+.cr-label .cr-sub { font-size: 0.72rem; color: var(--muted); font-weight: 400; margin-top: 2px; }
+.cr-val {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-right: 1px solid var(--border);
+}
+.cr-val:last-child { border-right: none; }
+.cr-val.winner { background: rgba(22,163,74,0.06); }
+.cr-val.loser  { background: rgba(220,38,38,0.04); }
+
+.val-num {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+}
+.val-bar-wrap { flex: 1; max-width: 120px; }
+.val-bar-bg {
+    height: 6px;
+    background: #e5e7eb;
+    border-radius: 99px;
+    overflow: hidden;
+}
+.val-bar {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.6s ease;
+}
+.val-tag {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.tag-low    { background: #dcfce7; color: #15803d; }
+.tag-mod    { background: #fef9c3; color: #92400e; }
+.tag-high   { background: #fee2e2; color: #dc2626; }
+.tag-good   { background: #dbeafe; color: #1d4ed8; }
+
+.winner-crown {
+    font-size: 0.8rem;
+    margin-left: 4px;
+}
+
+/* ── Score Section ── */
+.score-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    background: #f8fafc;
+    border-top: 2px solid var(--border);
+}
+.score-val {
+    padding: 18px 20px;
+    display: flex; align-items: center; gap: 12px;
+    border-right: 1px solid var(--border);
+}
+.score-val:last-child { border-right: none; }
+.score-circle {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem; font-weight: 800;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+/* ── AI Verdict ── */
+.verdict-card {
+    background: linear-gradient(135deg, #fafff4, #f0fdf4);
+    border: 2px solid #86efac;
+    border-radius: 20px;
+    padding: 28px 32px;
+    margin-bottom: 28px;
+}
+.verdict-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+}
+.verdict-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.15rem;
+    color: #15803d; margin: 0;
+}
+.verdict-body {
+    font-size: 0.92rem;
+    color: #374151;
+    line-height: 1.7;
+}
+.verdict-winner-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #16a34a;
+    color: #fff;
+    padding: 8px 20px;
+    border-radius: 99px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+}
+.verdict-loading {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--muted); font-size: 0.88rem;
+    padding: 8px 0;
+}
+.verdict-loading .spinner-border { width: 1.2rem; height: 1.2rem; }
+
+/* ── Mini stat bars ── */
+.mini-stat { margin-bottom: 8px; }
+.mini-stat-label {
+    display: flex; justify-content: space-between;
+    font-size: 0.76rem; color: var(--muted); margin-bottom: 3px;
+}
+.mini-bar-bg {
+    height: 5px; background: #e5e7eb;
+    border-radius: 99px; overflow: hidden;
+}
+.mini-bar { height: 100%; border-radius: 99px; }
+
+/* ── Action Buttons ── */
+.action-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 12px;
+}
+.btn-action {
+    padding: 10px 22px;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: transform 0.15s, box-shadow 0.2s;
+    border: none; cursor: pointer;
+}
+.btn-action:hover { transform: translateY(-2px); }
+.btn-back  { background: #f1f5f9; color: #374151; }
+.btn-p1    { background: linear-gradient(135deg,#16a34a,#15803d); color:#fff; }
+.btn-p2    { background: linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .search-grid { grid-template-columns: 1fr; }
+    .vs-badge { display: none; }
+    .product-headers, .compare-row, .score-row {
+        grid-template-columns: 120px 1fr 1fr;
+    }
+    .ph-card { padding: 14px 16px; }
+    .compare-hero h1 { font-size: 1.5rem; }
+    .compare-hero { padding: 24px 20px; }
+}
+@media (max-width: 540px) {
+    .product-headers, .compare-row, .score-row {
+        grid-template-columns: 90px 1fr 1fr;
+    }
+    .cr-label { padding: 10px 12px; font-size: 0.75rem; }
+    .cr-val { padding: 10px 12px; }
+    .val-num { font-size: 1rem; }
+    .val-bar-wrap { display: none; }
+}
+</style>
+
+<div class="compare-page">
+<div class="container">
+
+<!-- Hero -->
+<div class="compare-hero">
+    <h1>📊 Product Comparison</h1>
+    <p>Side-by-side nutritional analysis with AI-powered verdict</p>
+</div>
+
+<!-- Search Bar -->
+<div class="search-section">
+    <h5><i class="bi bi-search"></i> Compare any two products</h5>
+    <div class="search-grid">
+        <div class="search-field">
+            <label>Product 1</label>
+            <div class="search-input-wrap">
+                <i class="bi bi-box-seam s-icon"></i>
+                <input type="text" id="search1" placeholder="Search product or brand..."
+                       autocomplete="off"
+                       value="{{ product1['name'] if product1 else '' }}">
+                <div class="autocomplete-box" id="ac1"></div>
+            </div>
+        </div>
+        <div style="display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;">
+            <div class="vs-badge">VS</div>
+        </div>
+        <div class="search-field">
+            <label>Product 2</label>
+            <div class="search-input-wrap">
+                <i class="bi bi-box-seam s-icon"></i>
+                <input type="text" id="search2" placeholder="Search product or brand..."
+                       autocomplete="off"
+                       value="{{ product2['name'] if product2 else '' }}">
+                <div class="autocomplete-box" id="ac2"></div>
+            </div>
+        </div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:16px;">
+        <button class="btn-compare" onclick="goCompare()">
+            <i class="bi bi-bar-chart-line-fill"></i> Compare Now
+        </button>
+    </div>
+</div>
+
+{% if product1 and product2 %}
+
+<!-- Product Headers -->
+<div class="product-headers">
+    <div class="ph-label"></div>
+    <div class="ph-card">
+        {% if product1.get('image_url') %}
+        <img src="{{ product1['image_url'] }}" class="ph-img" alt="{{ product1['name'] }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ph-letter" style="display:none;">{{ product1['name'][0].upper() }}</div>
+        {% else %}
+        <div class="ph-letter">{{ product1['name'][0].upper() }}</div>
+        {% endif %}
+        <div class="ph-info">
+            <h3>{{ product1['name'] }}</h3>
+            <div class="ph-brand">{{ product1.get('brand','') or 'General' }}</div>
+            {% if p1_ai %}<div class="ai-tag mt-1">🤖 AI Generated</div>{% endif %}
+        </div>
+        <div class="ph-score">
+            <div class="score-num">{{ product1.get('health_score', 0) }}</div>
+            <div class="score-lbl">HEALTH SCORE</div>
+        </div>
+    </div>
+    <div class="ph-card p2">
+        {% if product2.get('image_url') %}
+        <img src="{{ product2['image_url'] }}" class="ph-img" alt="{{ product2['name'] }}"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="ph-letter" style="display:none;">{{ product2['name'][0].upper() }}</div>
+        {% else %}
+        <div class="ph-letter">{{ product2['name'][0].upper() }}</div>
+        {% endif %}
+        <div class="ph-info">
+            <h3>{{ product2['name'] }}</h3>
+            <div class="ph-brand">{{ product2.get('brand','') or 'General' }}</div>
+            {% if p2_ai %}<div class="ai-tag mt-1">🤖 AI Generated</div>{% endif %}
+        </div>
+        <div class="ph-score">
+            <div class="score-num">{{ product2.get('health_score', 0) }}</div>
+            <div class="score-lbl">HEALTH SCORE</div>
+        </div>
+    </div>
+</div>
+
+<!-- Comparison Table -->
+<div class="compare-table-wrap">
+
+    {% set nutrients = [
+        ('Calories (kcal)', 'calories', 'Per serving', 2000, 'lower', 'kcal'),
+        ('Sugar (g)', 'sugar_g', 'Daily max: 50g', 50, 'lower', 'g'),
+        ('Total Fat (g)', 'fat_g', 'Daily max: 70g', 70, 'lower', 'g'),
+        ('Saturated Fat (g)', 'saturated_fat_g', 'Keep low', 20, 'lower', 'g'),
+        ('Protein (g)', 'protein_g', 'Daily goal: 50g', 50, 'higher', 'g'),
+        ('Fiber (g)', 'fiber_g', 'Daily goal: 28g', 28, 'higher', 'g'),
+        ('Sodium (mg)', 'sodium_mg', 'Daily max: 2300mg', 2300, 'lower', 'mg'),
+        ('Carbohydrates (g)', 'carbohydrates_g', 'Daily goal: 300g', 300, 'lower', 'g'),
+        ('Cholesterol (mg)', 'cholesterol_mg', 'Daily max: 300mg', 300, 'lower', 'mg'),
+    ] %}
+
+    {% for label, key, sub, daily, prefer, unit in nutrients %}
+    {% set v1 = product1.get(key, 0) or 0 %}
+    {% set v2 = product2.get(key, 0) or 0 %}
+    {% set p1_pct = [((v1 / daily) * 100), 100] | min %}
+    {% set p2_pct = [((v2 / daily) * 100), 100] | min %}
+    {% if prefer == 'lower' %}
+        {% set p1_wins = v1 < v2 %}
+        {% set p2_wins = v2 < v1 %}
+    {% else %}
+        {% set p1_wins = v1 > v2 %}
+        {% set p2_wins = v2 > v1 %}
+    {% endif %}
+
+    <div class="compare-row">
+        <div class="cr-label">
+            {{ label }}
+            <span class="cr-sub">{{ sub }}</span>
+        </div>
+        <div class="cr-val {{ 'winner' if p1_wins else ('loser' if p2_wins else '') }}">
+            <span class="val-num">{{ v1 }}{{ unit }}</span>
+            <div class="val-bar-wrap">
+                <div class="val-bar-bg">
+                    <div class="val-bar" style="width:{{ p1_pct }}%;background:{{ '#16a34a' if prefer=='higher' else ('#ef4444' if p1_pct > 60 else '#f59e0b' if p1_pct > 30 else '#16a34a') }};"></div>
+                </div>
+            </div>
+            {% if p1_wins %}<span class="val-tag tag-low">✓ Better</span>{% endif %}
+            {% if prefer == 'higher' and v1 > daily * 0.4 %}<span class="val-tag tag-good">High</span>{% endif %}
+        </div>
+        <div class="cr-val {{ 'winner' if p2_wins else ('loser' if p1_wins else '') }}">
+            <span class="val-num">{{ v2 }}{{ unit }}</span>
+            <div class="val-bar-wrap">
+                <div class="val-bar-bg">
+                    <div class="val-bar" style="width:{{ p2_pct }}%;background:{{ '#16a34a' if prefer=='higher' else ('#ef4444' if p2_pct > 60 else '#f59e0b' if p2_pct > 30 else '#16a34a') }};"></div>
+                </div>
+            </div>
+            {% if p2_wins %}<span class="val-tag tag-low">✓ Better</span>{% endif %}
+            {% if prefer == 'higher' and v2 > daily * 0.4 %}<span class="val-tag tag-good">High</span>{% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Ingredients Row -->
+    <div class="compare-row">
+        <div class="cr-label">
+            Ingredients
+            <span class="cr-sub">Main components</span>
+        </div>
+        <div class="cr-val" style="align-items:flex-start;padding-top:14px;padding-bottom:14px;">
+            <div style="font-size:0.78rem;color:var(--muted);line-height:1.6;">
+                {{ product1.get('ingredients') or 'Not available' }}
+            </div>
+        </div>
+        <div class="cr-val" style="align-items:flex-start;padding-top:14px;padding-bottom:14px;">
+            <div style="font-size:0.78rem;color:var(--muted);line-height:1.6;">
+                {{ product2.get('ingredients') or 'Not available' }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Allergens Row -->
+    <div class="compare-row">
+        <div class="cr-label">
+            Allergens
+            <span class="cr-sub">Contains</span>
+        </div>
+        <div class="cr-val">
+            {% if product1.get('allergen_info') and product1['allergen_info'] != 'None' %}
+            <span class="val-tag tag-high">⚠ {{ product1['allergen_info'] }}</span>
+            {% else %}
+            <span class="val-tag tag-low">✓ None</span>
+            {% endif %}
+        </div>
+        <div class="cr-val">
+            {% if product2.get('allergen_info') and product2['allergen_info'] != 'None' %}
+            <span class="val-tag tag-high">⚠ {{ product2['allergen_info'] }}</span>
+            {% else %}
+            <span class="val-tag tag-low">✓ None</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Diet Tags Row -->
+    <div class="compare-row">
+        <div class="cr-label">Diet Tags</div>
+        <div class="cr-val" style="flex-wrap:wrap;gap:6px;">
+            {% if product1.get('is_vegan') %}<span class="val-tag tag-good">Vegan</span>{% endif %}
+            {% if product1.get('is_vegetarian') %}<span class="val-tag tag-low">Vegetarian</span>{% endif %}
+            {% if product1.get('is_gluten_free') %}<span class="val-tag tag-mod">Gluten-Free</span>{% endif %}
+            {% if product1.get('is_organic') %}<span class="val-tag tag-low">Organic</span>{% endif %}
+            {% if not product1.get('is_vegan') and not product1.get('is_vegetarian') and not product1.get('is_gluten_free') %}
+            <span style="font-size:0.78rem;color:var(--muted);">—</span>
+            {% endif %}
+        </div>
+        <div class="cr-val" style="flex-wrap:wrap;gap:6px;">
+            {% if product2.get('is_vegan') %}<span class="val-tag tag-good">Vegan</span>{% endif %}
+            {% if product2.get('is_vegetarian') %}<span class="val-tag tag-low">Vegetarian</span>{% endif %}
+            {% if product2.get('is_gluten_free') %}<span class="val-tag tag-mod">Gluten-Free</span>{% endif %}
+            {% if product2.get('is_organic') %}<span class="val-tag tag-low">Organic</span>{% endif %}
+            {% if not product2.get('is_vegan') and not product2.get('is_vegetarian') and not product2.get('is_gluten_free') %}
+            <span style="font-size:0.78rem;color:var(--muted);">—</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Overall Health Score Row -->
+    <div class="score-row">
+        <div class="cr-label" style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;">Overall Score</div>
+        {% set s1 = product1.get('health_score', 0) or 0 %}
+        {% set s2 = product2.get('health_score', 0) or 0 %}
+        <div class="score-val">
+            <div class="score-circle" style="background:{{ '#16a34a' if s1 >= 60 else '#f59e0b' if s1 >= 40 else '#ef4444' }};">{{ s1 }}</div>
+            <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;">
+                    {{ 'Healthy Choice' if s1 >= 60 else 'Moderate' if s1 >= 40 else 'Consume with Care' }}
+                </div>
+                {% if s1 > s2 %}<div style="font-size:0.75rem;color:var(--green);">🏆 Higher Score</div>{% endif %}
+            </div>
+        </div>
+        <div class="score-val">
+            <div class="score-circle" style="background:{{ '#16a34a' if s2 >= 60 else '#f59e0b' if s2 >= 40 else '#ef4444' }};">{{ s2 }}</div>
+            <div>
+                <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;">
+                    {{ 'Healthy Choice' if s2 >= 60 else 'Moderate' if s2 >= 40 else 'Consume with Care' }}
+                </div>
+                {% if s2 > s1 %}<div style="font-size:0.75rem;color:var(--green);">🏆 Higher Score</div>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AI Verdict -->
+<div class="verdict-card" id="verdict-card">
+    <div class="verdict-header">
+        <div style="font-size:2rem;">🤖</div>
+        <h3>AI Verdict</h3>
+    </div>
+    <div class="verdict-body" id="verdict-body">
+        <div class="verdict-loading">
+            <div class="spinner-border spinner-border-sm text-success"></div>
+            Analysing both products and generating verdict...
+        </div>
+    </div>
+</div>
+
+<!-- Action Buttons -->
+<div class="action-row">
+    <a href="/" class="btn-action btn-back">
+        <i class="bi bi-arrow-left"></i> Back to Home
+    </a>
+    {# For AI products use name as URL slug; for DB products use id #}
+    <a href="/p/{{ product1['name'] | urlencode if p1_ai else product1.get('id', product1['name']) }}" class="btn-action btn-p1">
+        <i class="bi bi-info-circle"></i> {{ product1['name'] }} Details
+    </a>
+    <a href="/p/{{ product2['name'] | urlencode if p2_ai else product2.get('id', product2['name']) }}" class="btn-action btn-p2">
+        <i class="bi bi-info-circle"></i> {{ product2['name'] }} Details
+    </a>
+</div>
+
+{% else %}
+<!-- No products yet — show prompt -->
+<div style="text-align:center;padding:60px 20px;color:var(--muted);">
+    <div style="font-size:4rem;margin-bottom:16px;">📊</div>
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1.2rem;color:var(--text);margin-bottom:8px;">
+        Search for two products above to compare
+    </div>
+    <div style="font-size:0.88rem;">
+        Type any product name — our AI will find it even if it's not in the database
+    </div>
+</div>
+{% endif %}
+
+</div>
+</div>
+
+<script>
+// ── Autocomplete ──
+const acState = {
+    '1': { input: null, drop: null, pid: '' },
+    '2': { input: null, drop: null, pid: '' }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    ['1','2'].forEach(n => {
+        const input = document.getElementById('search' + n);
+        const drop  = document.getElementById('ac' + n);
+        acState[n].input = input;
+        acState[n].drop  = drop;
+
+        let timer;
+        input.addEventListener('input', () => {
+            clearTimeout(timer);
+            const q = input.value.trim();
+            if (q.length < 1) { drop.style.display='none'; return; }
+            timer = setTimeout(() => fetchAC(q, n), 250);
+        });
+
+        input.addEventListener('focus', () => {
+            if (input.value.trim().length > 0)
+                input.dispatchEvent(new Event('input'));
+        });
+
+        document.addEventListener('click', e => {
+            if (!input.contains(e.target) && !drop.contains(e.target))
+                drop.style.display = 'none';
+        });
+    });
+
+    // Auto-fetch AI verdict if products are already loaded
+    {% if product1 and product2 %}
+    fetchVerdict();
+    {% endif %}
+});
+
+function fetchAC(q, n) {
+    fetch('/api/autocomplete?q=' + encodeURIComponent(q))
+        .then(r => r.json())
+        .then(data => renderAC(data, n))
+        .catch(() => acState[n].drop.style.display='none');
+}
+
+function renderAC(results, n) {
+    const drop = acState[n].drop;
+    if (!results.length) { drop.style.display='none'; return; }
+
+    drop.innerHTML = results.map(p => {
+        const isAI  = p.source === 'ai';
+        const navId = isAI ? encodeURIComponent(p.name) : p.id;
+        const meta  = isAI
+            ? `${p.brand ? p.brand+' · ' : ''}${p.calories ? p.calories+' kcal (AI)' : 'AI suggestion'}`
+            : `${p.id} · ${p.calories} kcal${p.brand ? ' · '+p.brand : ''}`;
+        return `<div class="ac-item" onmousedown="selectAC(event,'${navId}','${p.name.replace(/'/g,"\\'")}','${n}','${isAI}')">
+            <div style="flex:1;min-width:0;">
+                <div class="ac-name">${p.name}${isAI ? ' <span style="font-size:0.65rem;background:#ede9fe;color:#6d28d9;padding:1px 7px;border-radius:20px;font-weight:700;">🤖 AI</span>' : ''}</div>
+                <div class="ac-meta">${meta}</div>
+            </div>
+            ${!isAI ? `<span class="ac-badge ${p.is_healthy?'healthy':'risky'}">${p.is_healthy?'Healthy':'Risky'}</span>` : ''}
+        </div>`;
+    }).join('');
+    drop.style.display = 'block';
+}
+
+function selectAC(e, id, name, n, isAI) {
+    e.preventDefault();
+    const input = acState[n].input;
+    const drop  = acState[n].drop;
+    input.value = name;
+    acState[n].pid = isAI === 'true' ? encodeURIComponent(name) : id;
+    drop.style.display = 'none';
+}
+
+function goCompare() {
+    const v1 = acState['1'].pid || encodeURIComponent(acState['1'].input.value.trim());
+    const v2 = acState['2'].pid || encodeURIComponent(acState['2'].input.value.trim());
+    if (!acState['1'].input.value.trim() || !acState['2'].input.value.trim()) {
+        alert('Please enter both product names to compare.');
+        return;
+    }
+    window.location.href = `/compare/${v1}/vs/${v2}`;
+}
+
+// ── Enter key support ──
+document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') goCompare();
+});
+
+// ── AI Verdict — calls Flask /api/compare-verdict ──
+function fetchVerdict() {
+    const p1 = {{ product1 | tojson if product1 else 'null' }};
+    const p2 = {{ product2 | tojson if product2 else 'null' }};
+    if (!p1 || !p2) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => {
+        controller.abort();
+        showVerdictError('Request timed out. Please try again.');
+    }, 20000);
+
+    fetch('/api/compare-verdict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product1: p1, product2: p2 }),
+        signal: controller.signal
+    })
+    .then(r => { clearTimeout(timeout); return r.json(); })
+    .then(data => {
+        if (!data.success || !data.verdict) {
+            showVerdictError(data.error || 'Empty response');
+            return;
+        }
+        const text  = data.verdict;
+        const lower = text.toLowerCase();
+        let winnerName = '';
+        if (p1.health_score > p2.health_score && lower.includes(p1.name.toLowerCase()))
+            winnerName = p1.name;
+        else if (p2.health_score > p1.health_score && lower.includes(p2.name.toLowerCase()))
+            winnerName = p2.name;
+
+        document.getElementById('verdict-body').innerHTML =
+            (winnerName
+                ? `<div class="verdict-winner-badge">🏆 Better Choice: ${winnerName}</div>`
+                : `<div class="verdict-winner-badge" style="background:#f59e0b;">🤝 It's a Tie!</div>`)
+            + `<div style="white-space:pre-line;margin-top:10px;font-size:0.92rem;line-height:1.8;">${text}</div>`;
+    })
+    .catch(e => {
+        clearTimeout(timeout);
+        if (e.name !== 'AbortError') showVerdictError(e.message);
+    });
+}
+
+function showVerdictError(msg) {
+    document.getElementById('verdict-body').innerHTML = `
+        <div style="display:flex;align-items:flex-start;gap:10px;">
+            <i class="bi bi-exclamation-triangle-fill" style="color:#f59e0b;font-size:1.3rem;flex-shrink:0;margin-top:2px;"></i>
+            <div>
+                <div style="font-weight:700;color:#374151;margin-bottom:4px;">Could not generate AI verdict</div>
+                <div style="font-size:0.82rem;color:var(--muted);">${msg || 'Check that GROQ_API_KEY is set in your .env and restart Flask.'}</div>
+                <button onclick="fetchVerdict()" style="margin-top:10px;padding:7px 18px;background:#16a34a;color:#fff;border:none;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer;">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Try Again
+                </button>
+            </div>
+        </div>`;
+}
+
+</script>
+{% endblock %}

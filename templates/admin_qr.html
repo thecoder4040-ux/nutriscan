@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}QR Code Generator — Admin{% endblock %}
+{% block content %}
+<style>
+:root{--g:#16a34a;--gd:#15803d;--gl:#f0fdf4;--sf:#f8fafc;--bd:#e2e8f0;--tx:#111827;--mu:#6b7280;--rd:14px;--sh:0 2px 16px rgba(0,0,0,.07);}
+.pg{padding:28px 0 60px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.topbar h1{font-family:"Syne",sans-serif;font-size:1.55rem;font-weight:800;color:var(--tx);margin:0 0 3px;}
+.topbar p{color:var(--mu);margin:0;font-size:.84rem;}
+.btn-bk{padding:8px 16px;border-radius:10px;font-size:.83rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--bd);color:var(--tx);background:#fff;transition:all .15s;}
+.btn-bk:hover{border-color:var(--g);color:var(--g);background:var(--gl);}
+.btn-pr{padding:8px 16px;border-radius:10px;font-size:.83rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--g);color:var(--g);background:var(--gl);transition:all .15s;}
+.btn-pr:hover{background:var(--g);color:#fff;}
+
+/* Layout */
+.layout{display:grid;grid-template-columns:380px 1fr;gap:20px;align-items:start;}
+
+/* Left panel */
+.panel{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);overflow:hidden;}
+.panel-head{padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--sf);}
+.panel-head h5{font-family:"Syne",sans-serif;font-weight:700;font-size:.88rem;color:var(--tx);margin:0;}
+.panel-body{padding:16px 18px;}
+.panel-foot{padding:14px 18px;border-top:1px solid var(--bd);background:var(--sf);}
+
+/* Search */
+.sw{position:relative;margin-bottom:12px;}
+.sw i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mu);pointer-events:none;}
+.sw input{width:100%;padding:9px 11px 9px 34px;border:1.5px solid var(--bd);border-radius:10px;font-size:.86rem;background:#fff;outline:none;}
+.sw input:focus{border-color:var(--g);}
+
+/* Product list */
+.prod-list{max-height:380px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;}
+.prod-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1.5px solid transparent;cursor:pointer;transition:all .15s;text-decoration:none;color:var(--tx);}
+.prod-item:hover{border-color:var(--bd);background:var(--sf);}
+.prod-item.active{border-color:var(--g);background:var(--gl);}
+.prod-item .pname{font-weight:600;font-size:.84rem;color:var(--tx);}
+.prod-item .pid{font-size:.71rem;color:var(--mu);font-family:monospace;}
+.bh{background:#dcfce7;color:#15803d;padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:700;white-space:nowrap;}
+.br{background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:700;white-space:nowrap;}
+
+/* Generate button */
+.btn-gen{width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;font-family:"Syne",sans-serif;font-weight:700;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .15s,box-shadow .2s;}
+.btn-gen:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(22,163,74,.3);}
+.btn-gen:disabled{opacity:.45;cursor:not-allowed;}
+
+/* Preview card */
+.preview-card{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);}
+.preview-head{padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--sf);}
+.preview-head h5{font-family:"Syne",sans-serif;font-weight:700;font-size:.88rem;color:var(--tx);margin:0;}
+.preview-body{padding:32px;display:flex;flex-direction:column;align-items:center;}
+.qr-frame{width:220px;height:220px;border:2px dashed var(--bd);border-radius:16px;display:flex;align-items:center;justify-content:center;background:var(--sf);margin-bottom:20px;transition:all .3s;flex-shrink:0;}
+.qr-frame.loaded{border:2px solid var(--bd);background:#fff;}
+.qr-frame img{width:200px;height:200px;border-radius:10px;}
+.qr-placeholder{text-align:center;color:var(--mu);}
+.qr-placeholder i{font-size:3rem;opacity:.3;display:block;margin-bottom:8px;}
+.qr-placeholder p{font-size:.82rem;margin:0;}
+.product-info{text-align:center;margin-bottom:20px;}
+.product-info h4{font-family:"Syne",sans-serif;font-weight:800;color:var(--tx);margin-bottom:4px;font-size:1.1rem;}
+.product-info .url-chip{font-size:.74rem;background:#f1f5f9;padding:5px 12px;border-radius:20px;color:#475569;font-family:monospace;word-break:break-all;max-width:380px;display:inline-block;margin-top:4px;}
+.product-info .url-chip i{color:var(--g);margin-right:4px;}
+.action-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.abtn{padding:9px 18px;border-radius:10px;font-size:.84rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;border:1.5px solid var(--bd);background:#fff;color:var(--tx);text-decoration:none;}
+.abtn.primary{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-color:transparent;}
+.abtn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(22,163,74,.3);}
+.abtn:hover{border-color:var(--g);color:var(--g);background:var(--gl);}
+
+/* Info banner */
+.info-banner{background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px;}
+.info-banner i{color:#2563eb;font-size:1.2rem;flex-shrink:0;margin-top:1px;}
+.info-banner p{margin:0;font-size:.83rem;color:#1e40af;line-height:1.5;}
+.info-banner strong{font-weight:700;}
+
+/* Bulk section */
+.bulk-card{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);margin-top:20px;overflow:hidden;}
+.bulk-head{padding:14px 20px;border-bottom:1px solid var(--bd);background:var(--sf);display:flex;align-items:center;justify-content:space-between;}
+.bulk-head h5{font-family:"Syne",sans-serif;font-weight:700;font-size:.88rem;color:var(--tx);margin:0;}
+.bt{width:100%;border-collapse:collapse;}
+.bt th{padding:10px 14px;font-size:.71rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--mu);border-bottom:1.5px solid var(--bd);background:var(--sf);text-align:left;}
+.bt td{padding:10px 14px;font-size:.83rem;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+.bt tr:last-child td{border-bottom:none;}
+.bt tbody tr:hover{background:#fafcff;}
+.btn-sm-gen{padding:5px 12px;border-radius:8px;font-size:.76rem;font-weight:600;cursor:pointer;border:1.5px solid var(--g);color:var(--g);background:var(--gl);transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn-sm-gen:hover{background:var(--g);color:#fff;}
+.status-chip{padding:2px 9px;border-radius:20px;font-size:.69rem;font-weight:700;}
+.sc-pending{background:#f1f5f9;color:#64748b;}
+.sc-done{background:#dcfce7;color:#15803d;}
+
+/* Bulk results */
+.bulk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;padding:20px;}
+.bulk-item{background:var(--sf);border:1.5px solid var(--bd);border-radius:12px;padding:14px;text-align:center;}
+.bulk-item img{width:120px;height:120px;border-radius:8px;margin-bottom:8px;}
+.bulk-item .bn{font-weight:700;font-size:.78rem;color:var(--tx);margin-bottom:2px;}
+.bulk-item .bi2{font-size:.7rem;color:var(--mu);font-family:monospace;}
+.bulk-item .dl-btn{margin-top:8px;padding:4px 10px;border-radius:7px;font-size:.72rem;font-weight:600;cursor:pointer;border:1.5px solid var(--g);color:var(--g);background:#fff;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.bulk-item .dl-btn:hover{background:var(--g);color:#fff;}
+
+/* How it works */
+.how-card{background:#fff;border:1.5px solid var(--bd);border-radius:var(--rd);box-shadow:var(--sh);margin-top:20px;overflow:hidden;}
+.step{display:flex;align-items:flex-start;gap:14px;padding:16px 20px;border-bottom:1px solid var(--bd);}
+.step:last-child{border-bottom:none;}
+.step-num{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;display:flex;align-items:center;justify-content:center;font-family:"Georgia",serif;font-weight:700;font-size:.85rem;flex-shrink:0;}
+.step-body h6{font-family:"Syne",sans-serif;font-weight:700;font-size:.84rem;margin:0 0 3px;}
+.step-body p{font-size:.8rem;color:var(--mu);margin:0;line-height:1.4;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="pg">
+<div class="container-fluid" style="max-width:1200px;padding:0 20px;">
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div>
+    <h1>&#128392; QR Code Generator</h1>
+    <p>Generate scannable QR codes that take users directly to product pages</p>
+  </div>
+  <div style="display:flex;gap:9px;flex-wrap:wrap;">
+    <a href="/admin" class="btn-bk"><i class="bi bi-arrow-left"></i> Dashboard</a>
+    <a href="/admin/products" class="btn-pr"><i class="bi bi-box-seam"></i> Products</a>
+  </div>
+</div>
+
+
+
+<!-- Main Layout -->
+<div class="layout">
+
+  <!-- Left: Product Selection -->
+  <div class="panel">
+    <div class="panel-head"><h5><i class="bi bi-list-check me-2" style="color:var(--g);"></i>Select a Product</h5></div>
+    <div class="panel-body">
+      <div class="sw">
+        <i class="bi bi-search"></i>
+        <input type="text" id="prodSearch" placeholder="Search products...">
+      </div>
+      <div class="prod-list" id="prodList">
+        {% for p in products %}
+        <div class="prod-item" data-id="{{ p['id'] }}" data-name="{{ p['name']|replace("'","") }}" onclick="selectProduct(this)">
+          <div>
+            <div class="pname">{{ p['name'] }}</div>
+            <div class="pid">{{ p['id'] }}</div>
+          </div>
+          <span class="{{ 'bh' if p['is_healthy']==1 else 'br' }}">{{ 'Healthy' if p['is_healthy']==1 else 'Risky' }}</span>
+        </div>
+        {% else %}
+        <div style="text-align:center;padding:32px;color:var(--mu);">
+          <i class="bi bi-inbox" style="font-size:1.8rem;display:block;margin-bottom:8px;opacity:.4;"></i>
+          No products. <a href="/admin/products" style="color:var(--g);font-weight:700;">Add products first</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="panel-foot">
+      <button class="btn-gen" id="genBtn" disabled onclick="generateQR()">
+        <i class="bi bi-qr-code-scan"></i> Generate QR Code
+      </button>
+    </div>
+  </div>
+
+  <!-- Right: Preview -->
+  <div class="preview-card">
+    <div class="preview-head"><h5><i class="bi bi-image me-2" style="color:var(--g);"></i>QR Code Preview</h5></div>
+    <div class="preview-body">
+
+      <div class="qr-frame" id="qrFrame">
+        <div class="qr-placeholder">
+          <i class="bi bi-qr-code"></i>
+          <p>Select a product<br>then click Generate</p>
+        </div>
+      </div>
+
+      <div class="product-info" id="qrInfo" style="display:none;">
+        <h4 id="qrProdName"></h4>
+        <code style="font-size:.73rem;background:#f1f5f9;padding:2px 8px;border-radius:5px;color:#475569;" id="qrProdId"></code>
+        <div style="margin-top:10px;">
+          <div class="url-chip"><i class="bi bi-link-45deg"></i><span id="qrUrl"></span></div>
+        </div>
+        <p style="font-size:.75rem;color:var(--mu);margin-top:8px;">&#128247; Scanning this QR with any phone camera opens the product page directly</p>
+      </div>
+
+      <div class="action-btns" id="qrActions" style="display:none;">
+        <button class="abtn primary" onclick="downloadQR()"><i class="bi bi-download"></i> Download PNG</button>
+        <button class="abtn" onclick="printQR()"><i class="bi bi-printer"></i> Print</button>
+        <button class="abtn" onclick="copyLink()"><i class="bi bi-link"></i> Copy Link</button>
+        <button class="abtn" onclick="shareQR()"><i class="bi bi-share"></i> Share</button>
+      </div>
+
+      <div id="loadingState" style="display:none;text-align:center;color:var(--mu);">
+        <div style="width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--g);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px;"></div>
+        <p style="font-size:.83rem;">Generating QR code...</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Section -->
+<div class="bulk-card">
+  <div class="bulk-head">
+    <h5><i class="bi bi-collection me-2" style="color:var(--g);"></i>Bulk QR Generation</h5>
+    <div style="display:flex;gap:8px;">
+      <button class="abtn" onclick="selectAllBulk()" style="padding:5px 12px;font-size:.78rem;"><i class="bi bi-check-all"></i> Select All</button>
+      <button class="abtn" onclick="clearBulk()" style="padding:5px 12px;font-size:.78rem;"><i class="bi bi-x"></i> Clear</button>
+      <button class="abtn primary" onclick="generateBulk()" style="padding:5px 14px;font-size:.78rem;"><i class="bi bi-qr-code-scan"></i> Generate Selected</button>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="bt">
+      <thead>
+        <tr>
+          <th style="width:40px;"><input type="checkbox" id="selAll" onchange="toggleAll(this)" style="accent-color:var(--g);"></th>
+          <th>Product</th>
+          <th>ID</th>
+          <th>Status</th>
+          <th>Quick Generate</th>
+        </tr>
+      </thead>
+      <tbody id="bulkBody">
+        {% for p in products %}
+        <tr id="row-{{ p['id'] }}">
+          <td><input type="checkbox" class="pchk" value="{{ p['id'] }}" data-name="{{ p['name']|replace("'","") }}" style="accent-color:var(--g);"></td>
+          <td>
+            <div style="font-weight:700;font-size:.83rem;color:var(--tx);">{{ p['name'] }}</div>
+            <div style="font-size:.71rem;color:var(--mu);">{{ p['brand'] or '&mdash;' }}</div>
+          </td>
+          <td><code style="font-size:.72rem;background:#f1f5f9;padding:1px 6px;border-radius:4px;color:#475569;">{{ p['id'] }}</code></td>
+          <td><span class="status-chip sc-pending" id="st-{{ p['id'] }}">Not Generated</span></td>
+          <td>
+            <button class="btn-sm-gen" onclick="quickGenerate('{{ p['id'] }}','{{ p['name']|replace("'","") }}')">
+              <i class="bi bi-qr-code"></i> Generate
+            </button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div id="bulkResults" class="bulk-grid" style="display:none;"></div>
+</div>
+
+
+
+</div>
+</div>
+
+
+
+<script>
+var selectedId = null;
+var selectedName = null;
+var currentQR = null;
+var currentURL = null;
+
+// ── Product search filter ──
+document.getElementById("prodSearch").addEventListener("input", function(){
+  var s = this.value.toLowerCase();
+  document.querySelectorAll(".prod-item").forEach(function(el){
+    var matches = el.dataset.name.toLowerCase().includes(s) || el.dataset.id.toLowerCase().includes(s);
+    el.style.display = matches ? "" : "none";
+  });
+});
+
+// ── Select product ──
+function selectProduct(el){
+  document.querySelectorAll(".prod-item").forEach(function(i){ i.classList.remove("active"); });
+  el.classList.add("active");
+  selectedId = el.dataset.id;
+  selectedName = el.dataset.name;
+  document.getElementById("genBtn").disabled = false;
+}
+
+// ── Generate QR ──
+function generateQR(){
+  if(!selectedId) return;
+  showLoading(true);
+  fetch("/admin/generate-qr/" + selectedId)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      showLoading(false);
+      if(d.error){ alert(d.error); return; }
+      currentQR = d.qr_code;
+      currentURL = d.product_url;
+
+      var frame = document.getElementById("qrFrame");
+      frame.classList.add("loaded");
+      frame.innerHTML = "<img src='data:image/png;base64," + d.qr_code + "' alt='QR Code'>";
+
+      document.getElementById("qrProdName").textContent = d.product_name;
+      document.getElementById("qrProdId").textContent = d.product_id;
+      document.getElementById("qrUrl").textContent = d.product_url;
+      document.getElementById("qrInfo").style.display = "block";
+      document.getElementById("qrActions").style.display = "flex";
+    })
+    .catch(function(){ showLoading(false); alert("Failed to generate QR code"); });
+}
+
+function showLoading(on){
+  document.getElementById("loadingState").style.display = on ? "block" : "none";
+  if(on){
+    document.getElementById("qrFrame").innerHTML = "";
+    document.getElementById("qrInfo").style.display = "none";
+    document.getElementById("qrActions").style.display = "none";
+  }
+}
+
+// ── Download ──
+function downloadQR(){
+  if(!currentQR) return;
+  var a = document.createElement("a");
+  a.href = "data:image/png;base64," + currentQR;
+  a.download = "qr_" + selectedId + "_" + selectedName.replace(/\s+/g,"_") + ".png";
+  a.click();
+}
+
+// ── Print ──
+function printQR(){
+  if(!currentQR) return;
+  var w = window.open("","_blank");
+  w.document.write("<html><head><title>QR: " + selectedName + "</title><style>body{font-family:sans-serif;text-align:center;padding:40px;}img{width:300px;border-radius:12px;}h2{margin-bottom:6px;}code{background:#f1f5f9;padding:3px 8px;border-radius:5px;font-size:.9rem;}.url{margin-top:10px;font-size:.8rem;color:#6b7280;word-break:break-all;}</style></head><body>");
+  w.document.write("<h2>" + selectedName + "</h2>");
+  w.document.write("<p>ID: <code>" + selectedId + "</code></p>");
+  w.document.write("<img src='data:image/png;base64," + currentQR + "'>");
+  w.document.write("<div class='url'>" + currentURL + "</div>");
+  w.document.write("<p style='margin-top:16px;font-size:.75rem;color:#9ca3af;'>NutriScan — Scan to view product nutrition details</p>");
+  w.document.write("</body></html>");
+  w.document.close(); w.focus(); w.print();
+}
+
+// ── Copy link ──
+function copyLink(){
+  if(!currentURL) return;
+  navigator.clipboard.writeText(currentURL)
+    .then(function(){ showToast("Product link copied!"); })
+    .catch(function(){ alert("Copy failed. URL: " + currentURL); });
+}
+
+// ── Share ──
+function shareQR(){
+  if(!currentURL) return;
+  if(navigator.share){
+    navigator.share({ title: "NutriScan: " + selectedName, text: "View nutrition details for " + selectedName, url: currentURL });
+  } else { copyLink(); }
+}
+
+// ── Toast ──
+function showToast(msg){
+  var t = document.createElement("div");
+  t.textContent = msg;
+  t.style.cssText = "position:fixed;bottom:24px;right:24px;background:#111827;color:#fff;padding:10px 18px;border-radius:10px;font-size:.84rem;font-weight:600;z-index:9999;animation:fadeIn .2s ease;";
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 2500);
+}
+
+// ── Bulk: toggle all ──
+function toggleAll(cb){
+  document.querySelectorAll(".pchk").forEach(function(c){ c.checked = cb.checked; });
+}
+function selectAllBulk(){ document.querySelectorAll(".pchk").forEach(function(c){ c.checked=true; }); document.getElementById("selAll").checked=true; }
+function clearBulk(){ document.querySelectorAll(".pchk").forEach(function(c){ c.checked=false; }); document.getElementById("selAll").checked=false; }
+
+// ── Quick generate single row ──
+function quickGenerate(pid, pname){
+  var chip = document.getElementById("st-"+pid);
+  if(chip){ chip.className="status-chip"; chip.textContent="Generating..."; chip.style.background="#fef3c7"; chip.style.color="#d97706"; }
+  fetch("/admin/generate-qr/"+pid)
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(d.error){ alert(d.error); return; }
+      if(chip){ chip.className="status-chip sc-done"; chip.textContent="Generated"; }
+      // Auto-select and show in preview
+      selectedId = pid; selectedName = pname; currentQR = d.qr_code; currentURL = d.product_url;
+      var frame = document.getElementById("qrFrame");
+      frame.classList.add("loaded");
+      frame.innerHTML = "<img src='data:image/png;base64,"+d.qr_code+"' alt='QR Code'>";
+      document.getElementById("qrProdName").textContent = d.product_name;
+      document.getElementById("qrProdId").textContent = pid;
+      document.getElementById("qrUrl").textContent = d.product_url;
+      document.getElementById("qrInfo").style.display = "block";
+      document.getElementById("qrActions").style.display = "flex";
+      document.getElementById("loadingState").style.display = "none";
+      window.scrollTo({top:0,behavior:"smooth"});
+    })
+    .catch(function(){ if(chip){ chip.textContent="Failed"; chip.style.background="#fee2e2"; chip.style.color="#dc2626"; } });
+}
+
+// ── Bulk generate selected ──
+function generateBulk(){
+  var selected = [];
+  document.querySelectorAll(".pchk:checked").forEach(function(cb){
+    selected.push({ id: cb.value, name: cb.dataset.name });
+  });
+  if(selected.length===0){ alert("Please select at least one product"); return; }
+
+  var results = document.getElementById("bulkResults");
+  results.innerHTML = "";
+  results.style.display = "grid";
+
+  selected.forEach(function(p){
+    var chip = document.getElementById("st-"+p.id);
+    if(chip){ chip.className="status-chip"; chip.textContent="Generating..."; chip.style.background="#fef3c7"; chip.style.color="#d97706"; }
+    fetch("/admin/generate-qr/"+p.id)
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if(chip){ chip.className="status-chip sc-done"; chip.textContent="Generated"; }
+        if(!d.error){
+          var item = document.createElement("div");
+          item.className = "bulk-item";
+          item.innerHTML = "<img src='data:image/png;base64,"+d.qr_code+"' alt='QR'>"
+            +"<div class='bn'>"+p.name+"</div>"
+            +"<div class='bi2'>"+p.id+"</div>"
+            +"<a href='data:image/png;base64,"+d.qr_code+"' download='qr_"+p.id+".png' class='dl-btn'>"
+            +"<i class='bi bi-download'></i> Download</a>";
+          results.appendChild(item);
+        }
+      })
+      .catch(function(){});
+  });
+  setTimeout(function(){ results.scrollIntoView({behavior:"smooth",block:"start"}); }, 300);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,714 @@
+{% extends "base.html" %}
+{% block title %}My Profile — NutriScan{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-hero {
+        background: linear-gradient(135deg, var(--green-dim) 0%, var(--green) 100%);
+        border-radius: 20px;
+        padding: 30px 36px;
+        color: #fff;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+    .profile-avatar-big {
+        width: 72px; height: 72px;
+        background: var(--accent);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Syne', sans-serif;
+        font-size: 2rem; font-weight: 800;
+        color: var(--green-dim);
+        flex-shrink: 0;
+        border: 3px solid rgba(255,255,255,0.3);
+    }
+    .profile-hero h2 { font-size: 1.6rem; font-weight: 800; margin-bottom: 4px; }
+    .profile-hero p  { color: rgba(255,255,255,0.8); font-size: 0.88rem; margin: 0; }
+
+    .profile-expiry-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(255,255,255,0.15);
+        border: 1.5px solid rgba(255,255,255,0.3);
+        border-radius: 20px;
+        padding: 4px 14px;
+        font-size: 0.78rem; font-weight: 700;
+        margin-top: 8px;
+        color: var(--accent);
+    }
+
+    .profile-card {
+        background: var(--surface);
+        border: 1.5px solid var(--border);
+        border-radius: 18px;
+        padding: 24px 28px;
+        margin-bottom: 22px;
+    }
+    .profile-card-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem; font-weight: 700;
+        color: var(--text);
+        margin-bottom: 20px;
+        display: flex; align-items: center; gap: 10px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+    .profile-card-title .card-icon {
+        width: 32px; height: 32px;
+        border-radius: 9px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 15px;
+    }
+
+    .field-group { margin-bottom: 16px; }
+    .field-group label {
+        font-size: 0.78rem; font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-bottom: 6px; display: block;
+    }
+    .field-group input, .field-group select, .field-group textarea {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        padding: 10px 14px;
+        width: 100%;
+        transition: border-color 0.2s;
+        background: var(--surface);
+        color: var(--text);
+    }
+    .field-group input:focus, .field-group select:focus {
+        outline: none;
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(26,158,92,0.1);
+    }
+    .field-group input[readonly] {
+        background: var(--surface2);
+        color: var(--text-muted);
+        cursor: not-allowed;
+    }
+
+    .goal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .goal-card {
+        border: 2px solid var(--border);
+        border-radius: 14px;
+        padding: 14px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.18s;
+        background: var(--surface2);
+    }
+    .goal-card:hover { border-color: var(--green); background: #f0fdf4; }
+    .goal-card.selected { border-color: var(--green); background: #dcfce7; }
+    .goal-card .goal-icon { font-size: 1.8rem; margin-bottom: 6px; }
+    .goal-card .goal-name { font-size: 0.8rem; font-weight: 700; color: var(--text); }
+    .goal-card .goal-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+    .goal-card input[type=radio] { display: none; }
+
+    .cond-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: 8px; }
+    .cond-box {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        padding: 9px 9px 9px 30px;
+        background: var(--surface2);
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+    }
+    .cond-box input { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); }
+    .cond-box:hover { border-color: var(--green); }
+    .cond-box.active-cond { background: #dcfce7; border-color: #86efac; }
+    .cond-box.active-al   { background: #fef2f2; border-color: #fca5a5; }
+    .cond-label { font-size: 0.82rem; font-weight: 600; color: var(--text); cursor: pointer; }
+
+    .save-btn {
+        background: var(--green);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        padding: 13px 32px;
+        font-family: 'Syne', sans-serif;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.15s, box-shadow 0.2s;
+        display: inline-flex; align-items: center; gap: 8px;
+    }
+    .save-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,158,92,0.35); }
+    .save-btn:disabled { opacity: 0.6; transform: none; }
+
+    .danger-zone {
+        background: #fff5f5;
+        border: 1.5px solid #fca5a5;
+        border-radius: 14px;
+        padding: 18px 22px;
+    }
+
+    .tab-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+    .tab-pill {
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.85rem; font-weight: 700;
+        border: 1.5px solid var(--border);
+        background: var(--surface);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .tab-pill.active { background: var(--green); color: #fff; border-color: var(--green); }
+    .tab-section { display: none; }
+    .tab-section.active { display: block; }
+
+    .vitals-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px,1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .vital-card {
+        background: var(--surface2);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        text-align: center;
+    }
+    .vital-card .v-val {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.4rem; font-weight: 800;
+        color: var(--green);
+    }
+    .vital-card .v-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; margin-top: 2px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mt-4 mb-5">
+
+    <!-- Hero -->
+    <div class="profile-hero">
+        <div class="profile-avatar-big">{{ user.first_name[0].upper() if user.first_name else 'U' }}</div>
+        <div>
+            <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+            <p><i class="bi bi-envelope me-1"></i>{{ user.email }}</p>
+            <p><i class="bi bi-calendar me-1"></i>Member since {{ user.created_at[:10] if user.created_at else 'N/A' }}</p>
+            {% if user.profile_saved_at %}
+            <div class="profile-expiry-badge">
+                <i class="bi bi-clock"></i>
+                Health profile expires in {{ days_remaining }} day{{ 's' if days_remaining != 1 else '' }}
+            </div>
+            {% else %}
+            <div class="profile-expiry-badge" style="border-color:rgba(255,255,255,0.2); color:rgba(255,255,255,0.7);">
+                <i class="bi bi-exclamation-circle"></i> Health profile not set up
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab pills -->
+    <div class="tab-pills">
+        <div class="tab-pill active" onclick="switchTab('account')"><i class="bi bi-person me-1"></i>Account</div>
+        <div class="tab-pill" onclick="switchTab('health')"><i class="bi bi-heart-pulse me-1"></i>Health Profile</div>
+        <div class="tab-pill" onclick="switchTab('goals')"><i class="bi bi-bullseye me-1"></i>Health Goals</div>
+        <div class="tab-pill" onclick="switchTab('conditions')"><i class="bi bi-clipboard2-pulse me-1"></i>Conditions & Allergies</div>
+    </div>
+
+    <!-- ══ TAB: Account ══ -->
+    <div class="tab-section active" id="tab-account">
+        <div class="profile-card">
+            <div class="profile-card-title">
+                <div class="card-icon" style="background:#dbeafe; color:#2563eb;"><i class="bi bi-person-circle"></i></div>
+                Account Details
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>First Name</label>
+                        <input type="text" id="acc_first" value="{{ user.first_name or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>Last Name</label>
+                        <input type="text" id="acc_last" value="{{ user.last_name or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>Email Address</label>
+                        <input type="email" id="acc_email" value="{{ user.email or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>New Password <span style="font-weight:400;text-transform:none;">(leave blank to keep current)</span></label>
+                        <input type="password" id="acc_password" placeholder="Enter new password">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>Confirm New Password</label>
+                        <input type="password" id="acc_password2" placeholder="Confirm new password">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex align-items-center gap-3">
+                <button class="save-btn" onclick="saveAccount()">
+                    <i class="bi bi-floppy"></i> Save Account Changes
+                </button>
+                <span id="acc-msg" style="font-size:0.85rem;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: Health Profile ══ -->
+    <div class="tab-section" id="tab-health">
+        <div class="profile-card">
+            <div class="profile-card-title">
+                <div class="card-icon" style="background:#dcfce7; color:#16a34a;"><i class="bi bi-heart-pulse"></i></div>
+                Clinical Vitals
+                <span style="margin-left:auto; font-size:0.75rem; font-weight:400; color:var(--text-muted);">
+                    <i class="bi bi-clock me-1"></i>Saved for 7 days, then auto-cleared for privacy
+                </span>
+            </div>
+
+            {% if user.profile_saved_at %}
+            <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:20px;font-size:0.83rem;color:#15803d;">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Profile active — expires in <strong>{{ days_remaining }} day{{ 's' if days_remaining != 1 else '' }}</strong>.
+                Groq AI uses these values for personalised analysis.
+            </div>
+            {% else %}
+            <div style="background:#fefce8;border:1.5px solid #fde047;border-radius:12px;padding:12px 16px;margin-bottom:20px;font-size:0.83rem;color:#854d0e;">
+                <i class="bi bi-exclamation-triangle me-1"></i>
+                No health profile set. Fill in your vitals below and save — the AI will use them for personalised analysis.
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Age</label>
+                        <input type="number" id="h_age" value="{{ user.age if user.age and user.age != 30 else '' }}" placeholder="e.g. 30">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Gender</label>
+                        <select id="h_gender">
+                            <option value="prefer_not_to_say" {% if user.gender == 'prefer_not_to_say' %}selected{% endif %}>Prefer not to say</option>
+                            <option value="male"   {% if user.gender == 'male'   %}selected{% endif %}>Male</option>
+                            <option value="female" {% if user.gender == 'female' %}selected{% endif %}>Female</option>
+                            <option value="other"  {% if user.gender == 'other'  %}selected{% endif %}>Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Weight (kg)</label>
+                        <input type="number" id="h_weight" value="{{ user.weight_kg if user.weight_kg and user.weight_kg != 70.0 else '' }}" placeholder="e.g. 70" step="0.1">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Height (cm)</label>
+                        <input type="number" id="h_height" value="{{ user.height_cm if user.height_cm and user.height_cm != 170.0 else '' }}" placeholder="e.g. 170">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>BP Systolic (mmHg)</label>
+                        <input type="number" id="h_bp_sys" value="{{ user.bp_systolic if user.bp_systolic and user.bp_systolic != 120 else '' }}" placeholder="e.g. 120">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>BP Diastolic (mmHg)</label>
+                        <input type="number" id="h_bp_dia" value="{{ user.bp_diastolic if user.bp_diastolic and user.bp_diastolic != 80 else '' }}" placeholder="e.g. 80">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Fasting Blood Sugar (mg/dL)</label>
+                        <input type="number" id="h_fbs" value="{{ user.fasting_blood_sugar_mg if user.fasting_blood_sugar_mg and user.fasting_blood_sugar_mg != 100.0 else '' }}" placeholder="e.g. 100">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>HbA1c (%)</label>
+                        <input type="number" id="h_hba1c" value="{{ user.hba1c_pct or '' }}" placeholder="e.g. 5.7" step="0.1">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Total Cholesterol (mg/dL)</label>
+                        <input type="number" id="h_chol" value="{{ user.total_cholesterol_mg if user.total_cholesterol_mg and user.total_cholesterol_mg != 180.0 else '' }}" placeholder="e.g. 180">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>LDL (mg/dL)</label>
+                        <input type="number" id="h_ldl" value="{{ user.ldl_mg or '' }}" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>HDL (mg/dL)</label>
+                        <input type="number" id="h_hdl" value="{{ user.hdl_mg or '' }}" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Triglycerides (mg/dL)</label>
+                        <input type="number" id="h_trig" value="{{ user.triglycerides_mg or '' }}" placeholder="Optional">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="field-group">
+                        <label>Medications</label>
+                        <input type="text" id="h_meds" value="{{ user.medications or '' }}" placeholder="e.g. Metformin 500mg, Warfarin 5mg">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Activity Level</label>
+                        <select id="h_activity">
+                            <option value="sedentary" {% if user.activity_level == 'sedentary' %}selected{% endif %}>Sedentary</option>
+                            <option value="light"     {% if user.activity_level == 'light'     %}selected{% endif %}>Lightly Active</option>
+                            <option value="moderate"  {% if not user.activity_level or user.activity_level == 'moderate' %}selected{% endif %}>Moderately Active</option>
+                            <option value="active"    {% if user.activity_level == 'active'    %}selected{% endif %}>Active</option>
+                            <option value="very_active" {% if user.activity_level == 'very_active' %}selected{% endif %}>Very Active</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3 d-flex align-items-end">
+                    <div style="display:flex; gap:12px;">
+                        <div class="form-check" style="background:var(--surface2);border-radius:9px;padding:10px 10px 10px 32px;border:1.5px solid var(--border);">
+                            <input class="form-check-input" type="checkbox" id="h_pregnant" {% if user.is_pregnant %}checked{% endif %}>
+                            <label class="form-check-label" for="h_pregnant" style="font-size:0.82rem;">Pregnant</label>
+                        </div>
+                        <div class="form-check" style="background:var(--surface2);border-radius:9px;padding:10px 10px 10px 32px;border:1.5px solid var(--border);">
+                            <input class="form-check-input" type="checkbox" id="h_bf" {% if user.is_breastfeeding %}checked{% endif %}>
+                            <label class="form-check-label" for="h_bf" style="font-size:0.82rem;">Breastfeeding</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex align-items-center gap-3 flex-wrap">
+                <button class="save-btn" onclick="saveHealthProfile()">
+                    <i class="bi bi-floppy"></i> Save Health Profile (7 days)
+                </button>
+                <span id="health-msg" style="font-size:0.85rem;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: Goals ══ -->
+    <div class="tab-section" id="tab-goals">
+        <div class="profile-card">
+            <div class="profile-card-title">
+                <div class="card-icon" style="background:#fef9c3; color:#ca8a04;"><i class="bi bi-bullseye"></i></div>
+                Health Goal
+                <span style="margin-left:auto;font-size:0.75rem;font-weight:400;color:var(--text-muted);">Groq AI tailors analysis to your goal</span>
+            </div>
+            <div class="goal-grid mb-4">
+                {% set goals = [
+                    ('weight_loss',      '🔥', 'Weight Loss',    'Calorie deficit, fat burn'),
+                    ('muscle_gain',      '💪', 'Muscle / Bulk',  'High protein, calorie surplus'),
+                    ('sugar_cut',        '🍬', 'Sugar Cut',      'Minimise sugar & refined carbs'),
+                    ('low_sodium',       '🧂', 'Low Sodium',     'Heart & BP management'),
+                    ('low_fat',          '🥑', 'Low Fat',        'Cholesterol & heart health'),
+                    ('high_protein',     '🥩', 'High Protein',   'Athletic & muscle recovery'),
+                    ('keto',             '⚡', 'Keto / Low Carb','Very low carb, high fat'),
+                    ('diabetic_diet',    '🩺', 'Diabetic Diet',  'Low GI, blood sugar control'),
+                    ('heart_healthy',    '❤️', 'Heart Healthy',  'Low sat fat, sodium, cholesterol'),
+                    ('general_wellness', '🌿', 'General Wellness','Balanced, no specific restriction'),
+                ] %}
+                {% for val, emoji, name, desc in goals %}
+                <label class="goal-card {% if user.health_goal == val %}selected{% endif %}" onclick="selectGoal(this)">
+                    <input type="radio" name="health_goal" value="{{ val }}" {% if user.health_goal == val %}checked{% endif %}>
+                    <div class="goal-icon">{{ emoji }}</div>
+                    <div class="goal-name">{{ name }}</div>
+                    <div class="goal-desc">{{ desc }}</div>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="profile-card-title" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <div class="card-icon" style="background:#ede9fe; color:#7c3aed;"><i class="bi bi-sliders"></i></div>
+                Personalised Daily Limits
+                <span style="margin-left:auto;font-size:0.75rem;font-weight:400;color:var(--text-muted);">Auto-set by goal, or customise</span>
+            </div>
+            <div class="row g-3">
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Daily Calories (kcal)</label>
+                        <input type="number" id="g_cal" value="{{ user.daily_calorie_target or 2000 }}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Sugar Limit (g)</label>
+                        <input type="number" id="g_sugar" value="{{ user.daily_sugar_limit_g or 50 }}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Sodium Limit (mg)</label>
+                        <input type="number" id="g_sodium" value="{{ user.daily_sodium_limit_mg or 2300 }}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Fat Limit (g)</label>
+                        <input type="number" id="g_fat" value="{{ user.daily_fat_limit_g or 78 }}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Protein Target (g)</label>
+                        <input type="number" id="g_protein" value="{{ user.daily_protein_target_g or 50 }}">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="field-group">
+                        <label>Fibre Target (g)</label>
+                        <input type="number" id="g_fiber" value="{{ user.daily_fiber_target_g or 28 }}">
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 d-flex align-items-center gap-3">
+                <button class="save-btn" onclick="saveGoals()">
+                    <i class="bi bi-floppy"></i> Save Goals & Limits
+                </button>
+                <span id="goals-msg" style="font-size:0.85rem;"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══ TAB: Conditions & Allergies ══ -->
+    <div class="tab-section" id="tab-conditions">
+        <div class="profile-card">
+            <div class="profile-card-title">
+                <div class="card-icon" style="background:#fee2e2; color:#dc2626;"><i class="bi bi-clipboard2-pulse"></i></div>
+                Health Conditions
+            </div>
+            <div class="cond-grid mb-4">
+                {% set cond_list = [
+                    ('c_diabetes',      1,  'Diabetes'),
+                    ('c_hyp',           2,  'Hypertension'),
+                    ('c_chol',          3,  'High Cholesterol'),
+                    ('c_heart',         4,  'Heart Disease'),
+                    ('c_kidney',        5,  'Kidney Disease'),
+                    ('c_gerd',          6,  'GERD / Acid Reflux'),
+                    ('c_pcos',          7,  'PCOS'),
+                    ('c_gout',          8,  'Gout'),
+                    ('c_celiac',        9,  'Celiac Disease'),
+                    ('c_thyroid',       10, 'Thyroid Disorder'),
+                ] %}
+                {% for id_, cid, label_ in cond_list %}
+                {% set checked = cid in condition_ids %}
+                <div class="cond-box {% if checked %}active-cond{% endif %}" id="box_{{ id_ }}" onclick="toggleCond(this, '{{ id_ }}')">
+                    <input type="checkbox" id="{{ id_ }}" data-cid="{{ cid }}" {% if checked %}checked{% endif %}>
+                    <label class="cond-label" for="{{ id_ }}">{{ label_ }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="profile-card-title" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <div class="card-icon" style="background:#fef2f2; color:#dc2626;"><i class="bi bi-exclamation-triangle-fill"></i></div>
+                Food Allergies
+            </div>
+            <div class="cond-grid mb-4">
+                {% set al_list = [
+                    ('a_peanuts',  1,  '🥜 Peanuts'),
+                    ('a_milk',     2,  '🥛 Milk / Dairy'),
+                    ('a_gluten',   3,  '🌾 Gluten / Wheat'),
+                    ('a_shellfish',4,  '🦐 Shellfish'),
+                    ('a_eggs',     5,  '🥚 Eggs'),
+                    ('a_soy',      6,  '🫘 Soy'),
+                    ('a_nuts',     7,  '🌰 Tree Nuts'),
+                    ('a_fish',     8,  '🐟 Fish'),
+                    ('a_sesame',   10, '🌱 Sesame'),
+                ] %}
+                {% for id_, aid, label_ in al_list %}
+                {% set checked = aid in allergen_ids %}
+                <div class="cond-box {% if checked %}active-al{% endif %}" id="box_{{ id_ }}" onclick="toggleAl(this, '{{ id_ }}')">
+                    <input type="checkbox" id="{{ id_ }}" data-aid="{{ aid }}" {% if checked %}checked{% endif %}>
+                    <label class="cond-label" for="{{ id_ }}">{{ label_ }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <button class="save-btn" onclick="saveConditions()">
+                    <i class="bi bi-floppy"></i> Save Conditions & Allergies
+                </button>
+                <span id="cond-msg" style="font-size:0.85rem;"></span>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ── Tab switching ──
+function switchTab(name) {
+    document.querySelectorAll('.tab-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-pill').forEach(p => p.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ── Goal selection ──
+function selectGoal(card) {
+    document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    // Auto-set daily limits based on goal
+    const presets = {
+        'weight_loss':      {cal:1500, sugar:25, sodium:2000, fat:50,  protein:80,  fiber:30},
+        'muscle_gain':      {cal:2800, sugar:50, sodium:2300, fat:90,  protein:150, fiber:28},
+        'sugar_cut':        {cal:2000, sugar:20, sodium:2300, fat:70,  protein:60,  fiber:30},
+        'low_sodium':       {cal:2000, sugar:50, sodium:1500, fat:70,  protein:50,  fiber:28},
+        'low_fat':          {cal:2000, sugar:50, sodium:2300, fat:40,  protein:60,  fiber:30},
+        'high_protein':     {cal:2500, sugar:40, sodium:2300, fat:80,  protein:160, fiber:28},
+        'keto':             {cal:2000, sugar:10, sodium:2300, fat:150, protein:100, fiber:20},
+        'diabetic_diet':    {cal:1800, sugar:25, sodium:2000, fat:65,  protein:70,  fiber:35},
+        'heart_healthy':    {cal:2000, sugar:36, sodium:1500, fat:55,  protein:55,  fiber:35},
+        'general_wellness': {cal:2000, sugar:50, sodium:2300, fat:78,  protein:50,  fiber:28},
+    };
+    const goal = card.querySelector('input').value;
+    const p = presets[goal];
+    if (p) {
+        document.getElementById('g_cal').value    = p.cal;
+        document.getElementById('g_sugar').value  = p.sugar;
+        document.getElementById('g_sodium').value = p.sodium;
+        document.getElementById('g_fat').value    = p.fat;
+        document.getElementById('g_protein').value= p.protein;
+        document.getElementById('g_fiber').value  = p.fiber;
+    }
+}
+
+// ── Condition & allergen toggle ──
+function toggleCond(box, id) {
+    const cb = document.getElementById(id);
+    setTimeout(() => {
+        box.classList.toggle('active-cond', cb.checked);
+    }, 10);
+}
+function toggleAl(box, id) {
+    const cb = document.getElementById(id);
+    setTimeout(() => {
+        box.classList.toggle('active-al', cb.checked);
+    }, 10);
+}
+
+// ── Save Account ──
+function saveAccount() {
+    const pw  = document.getElementById('acc_password').value;
+    const pw2 = document.getElementById('acc_password2').value;
+    if (pw && pw !== pw2) { showMsg('acc-msg', '❌ Passwords do not match', 'red'); return; }
+    if (pw && pw.length < 6) { showMsg('acc-msg', '❌ Password must be at least 6 characters', 'red'); return; }
+    fetch('/api/update-account', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            first_name: document.getElementById('acc_first').value,
+            last_name:  document.getElementById('acc_last').value,
+            email:      document.getElementById('acc_email').value,
+            password:   pw || null,
+        })
+    }).then(r => r.json()).then(d => {
+        if (d.success) showMsg('acc-msg', '✅ Account updated!', 'green');
+        else showMsg('acc-msg', '❌ ' + (d.error || 'Error'), 'red');
+    });
+}
+
+// ── Save Health Profile ──
+function saveHealthProfile() {
+    const conditions = {};
+    document.querySelectorAll('[id^="c_"]').forEach(cb => {
+        if (cb.type === 'checkbox') conditions[cb.id] = cb.checked;
+    });
+    fetch('/api/save-health-profile', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            age:                    parseFloat(document.getElementById('h_age').value)    || null,
+            gender:                 document.getElementById('h_gender').value,
+            weight_kg:              parseFloat(document.getElementById('h_weight').value) || null,
+            height_cm:              parseFloat(document.getElementById('h_height').value) || null,
+            bp_systolic:            parseFloat(document.getElementById('h_bp_sys').value) || null,
+            bp_diastolic:           parseFloat(document.getElementById('h_bp_dia').value) || null,
+            fasting_blood_sugar_mg: parseFloat(document.getElementById('h_fbs').value)    || null,
+            hba1c_pct:              parseFloat(document.getElementById('h_hba1c').value)  || null,
+            total_cholesterol_mg:   parseFloat(document.getElementById('h_chol').value)   || null,
+            ldl_mg:                 parseFloat(document.getElementById('h_ldl').value)    || null,
+            hdl_mg:                 parseFloat(document.getElementById('h_hdl').value)    || null,
+            triglycerides_mg:       parseFloat(document.getElementById('h_trig').value)   || null,
+            medications:            document.getElementById('h_meds').value,
+            activity_level:         document.getElementById('h_activity').value,
+            is_pregnant:            document.getElementById('h_pregnant').checked,
+            is_breastfeeding:       document.getElementById('h_bf').checked,
+        })
+    }).then(r => r.json()).then(d => {
+        if (d.success) { showMsg('health-msg', '✅ Health profile saved for 7 days!', 'green'); setTimeout(()=>location.reload(), 1500); }
+        else showMsg('health-msg', '❌ ' + (d.error || 'Error'), 'red');
+    });
+}
+
+// ── Save Goals ──
+function saveGoals() {
+    const goal = document.querySelector('input[name="health_goal"]:checked')?.value || 'general_wellness';
+    fetch('/api/update-goals', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            health_goal:            goal,
+            daily_calorie_target:   parseInt(document.getElementById('g_cal').value)    || 2000,
+            daily_sugar_limit_g:    parseInt(document.getElementById('g_sugar').value)  || 50,
+            daily_sodium_limit_mg:  parseInt(document.getElementById('g_sodium').value) || 2300,
+            daily_fat_limit_g:      parseInt(document.getElementById('g_fat').value)    || 78,
+            daily_protein_target_g: parseInt(document.getElementById('g_protein').value)|| 50,
+            daily_fiber_target_g:   parseInt(document.getElementById('g_fiber').value)  || 28,
+        })
+    }).then(r => r.json()).then(d => {
+        if (d.success) showMsg('goals-msg', '✅ Goals saved!', 'green');
+        else showMsg('goals-msg', '❌ ' + (d.error || 'Error'), 'red');
+    });
+}
+
+// ── Save Conditions & Allergies ──
+function saveConditions() {
+    const conditions = {};
+    document.querySelectorAll('[id^="c_"]').forEach(cb => {
+        if (cb.type==='checkbox') conditions[cb.id.replace('c_','').replace('chol','high_cholesterol').replace('hyp','hypertension').replace('heart','heart_disease').replace('kidney','kidney_disease').replace('celiac','celiac').replace('thyroid','thyroid').replace('pcos','pcos').replace('gout','gout').replace('gerd','gerd')] = cb.checked;
+    });
+    const allergens = [];
+    document.querySelectorAll('[id^="a_"]').forEach(cb => {
+        if (cb.type==='checkbox' && cb.checked) {
+            allergens.push(cb.id.replace('a_','').replace('peanuts','peanuts').replace('milk','milk').replace('gluten','gluten').replace('shellfish','shellfish').replace('eggs','eggs').replace('soy','soy').replace('nuts','tree nuts').replace('fish','fish').replace('sesame','sesame'));
+        }
+    });
+    fetch('/api/save-health-profile', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ allergens, ...conditions })
+    }).then(r => r.json()).then(d => {
+        if (d.success) showMsg('cond-msg', '✅ Saved!', 'green');
+        else showMsg('cond-msg', '❌ ' + (d.error || 'Error'), 'red');
+    });
+}
+
+function showMsg(id, msg, color) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.style.color = color === 'green' ? '#15803d' : '#dc2626';
+    el.style.fontWeight = '700';
+    setTimeout(() => { el.textContent = ''; }, 4000);
+}
+</script>
+{% endblock %}

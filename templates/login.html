@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+{% block title %}Login — NutriScan{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-wrap {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px 0;
+    }
+    .auth-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+    }
+    .auth-header {
+        background: linear-gradient(135deg, var(--green-dim), var(--green));
+        padding: 36px 40px 32px;
+        text-align: center;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .auth-header::after {
+        content: '';
+        position: absolute;
+        right: -30px; top: -30px;
+        width: 130px; height: 130px;
+        background: rgba(255,255,255,0.07);
+        border-radius: 50%;
+    }
+    .auth-header .auth-icon {
+        width: 64px; height: 64px;
+        background: rgba(255,255,255,0.15);
+        border-radius: 18px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 16px;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+    .auth-header h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+    }
+    .auth-header p {
+        color: rgba(255,255,255,0.78);
+        font-size: 0.88rem;
+        margin: 0;
+    }
+    .auth-body { padding: 36px 40px; }
+
+    /* Fields */
+    .field-wrap { margin-bottom: 20px; }
+    .field-wrap label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--text);
+        margin-bottom: 7px;
+        letter-spacing: 0.3px;
+    }
+    .field-inner {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .field-icon {
+        position: absolute;
+        left: 14px;
+        color: var(--text-muted);
+        font-size: 16px;
+        pointer-events: none;
+        z-index: 1;
+    }
+    .field-inner input {
+        width: 100%;
+        padding: 11px 44px 11px 42px;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.92rem;
+        color: var(--text);
+        background: var(--surface2);
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .field-inner input:focus {
+        border-color: var(--green);
+        box-shadow: 0 0 0 3px rgba(26,158,92,0.1);
+        background: #fff;
+    }
+    .field-inner input::placeholder { color: #b0bdb2; }
+    .toggle-pw {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        transition: color 0.15s;
+    }
+    .toggle-pw:hover { color: var(--green); }
+
+    /* Options row */
+    .options-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 24px;
+    }
+    .form-check-label { font-size: 0.85rem; color: var(--text-muted); }
+    .form-check-input:checked { background-color: var(--green); border-color: var(--green); }
+    .forgot-link {
+        font-size: 0.82rem;
+        color: var(--green);
+        text-decoration: none;
+        font-weight: 600;
+        transition: opacity 0.2s;
+    }
+    .forgot-link:hover { opacity: 0.75; color: var(--green); }
+
+    /* Submit */
+    .btn-submit {
+        width: 100%;
+        padding: 13px;
+        background: var(--green);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-family: 'Syne', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+    .btn-submit:hover {
+        background: var(--green-dim);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(26,158,92,0.3);
+    }
+    .btn-submit:active { transform: translateY(0); }
+
+    /* Register CTA */
+    .register-cta {
+        text-align: center;
+        padding: 18px 40px;
+        background: var(--surface2);
+        border-top: 1px solid var(--border);
+        font-size: 0.88rem;
+        color: var(--text-muted);
+    }
+    .register-cta a {
+        color: var(--green);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .register-cta a:hover { text-decoration: underline; }
+
+    /* Security note */
+    .security-note {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-top: 16px;
+        font-size: 0.8rem;
+        color: #166534;
+        max-width: 440px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .security-note i { font-size: 18px; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+    <div style="width:100%; max-width:440px;">
+
+        <div class="auth-card">
+            <!-- Header -->
+            <div class="auth-header">
+                <div class="auth-icon">🔐</div>
+                <h2>Welcome Back</h2>
+                <p>Sign in to your NutriScan account</p>
+            </div>
+
+            <!-- Form -->
+            <div class="auth-body">
+                <form id="loginForm" action="/login" method="POST">
+
+                    <!-- Email -->
+                    <div class="field-wrap">
+                        <label for="email">Email Address</label>
+                        <div class="field-inner">
+                            <i class="bi bi-envelope field-icon"></i>
+                            <input type="email" id="email" name="email"
+                                   placeholder="you@example.com" required
+                                   value="{{ request.args.get('email', '') }}"
+                                   autocomplete="email">
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="field-wrap">
+                        <label for="password">Password</label>
+                        <div class="field-inner">
+                            <i class="bi bi-lock field-icon"></i>
+                            <input type="password" id="password" name="password"
+                                   placeholder="Enter your password" required
+                                   autocomplete="current-password">
+                            <button type="button" class="toggle-pw" id="togglePw" tabindex="-1">
+                                <i class="bi bi-eye" id="togglePwIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remember + Forgot -->
+                    <div class="options-row">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   id="remember" name="remember" checked>
+                            <label class="form-check-label" for="remember">Remember me</label>
+                        </div>
+                        <a href="/forgot-password" class="forgot-link">
+                            Forgot password?
+                        </a>
+                    </div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="btn-submit">
+                        <i class="bi bi-box-arrow-in-right"></i> Sign In
+                    </button>
+
+                </form>
+            </div>
+
+            <!-- Register link -->
+            <div class="register-cta">
+                New to NutriScan?
+                <a href="/register">Create a free account</a>
+            </div>
+        </div>
+
+        <!-- Security note -->
+        <div class="security-note">
+            <i class="bi bi-shield-check"></i>
+            <span>Your login is secure. Passwords are encrypted and never stored in plain text.</span>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('togglePw').addEventListener('click', function () {
+        const pw   = document.getElementById('password');
+        const icon = document.getElementById('togglePwIcon');
+        const show = pw.type === 'password';
+        pw.type    = show ? 'text' : 'password';
+        icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+    });
+</script>
+{% endblock %}

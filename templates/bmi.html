@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}BMI Calculator — NutriScan{% endblock %}
+
+{% block extra_css %}
+<style>
+.bmi-hero{background:linear-gradient(135deg,var(--green-dim),var(--green));border-radius:20px;padding:32px 40px;color:#fff;margin-bottom:28px;display:flex;align-items:center;gap:20px;}
+.bmi-hero-icon{width:60px;height:60px;background:rgba(255,255,255,.15);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.9rem;flex-shrink:0;}
+.bmi-hero h1{font-size:1.8rem;font-weight:800;margin-bottom:4px;}
+.bmi-hero p{color:rgba(255,255,255,.8);font-size:.9rem;margin:0;}
+.bmi-card{background:#fff;border:1.5px solid var(--border);border-radius:20px;padding:28px 32px;margin-bottom:22px;}
+.bmi-card-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.t-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.field-lbl{font-size:.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block;}
+.bmi-iw{position:relative;margin-bottom:18px;}
+.bmi-inp{width:100%;border:1.5px solid var(--border);border-radius:11px;padding:12px 52px 12px 14px;font-size:1.1rem;font-weight:700;font-family:'Syne',sans-serif;color:var(--text);background:#fff;transition:border-color .2s;-moz-appearance:textfield;}
+.bmi-inp::-webkit-outer-spin-button,.bmi-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.bmi-inp:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(26,158,92,.1);}
+.bmi-unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:.8rem;font-weight:700;color:var(--text-muted);pointer-events:none;}
+.bmi-sel{width:100%;border:1.5px solid var(--border);border-radius:11px;padding:12px 14px;font-size:.95rem;font-family:'DM Sans',sans-serif;color:var(--text);background:#fff;margin-bottom:18px;}
+.bmi-sel:focus{outline:none;border-color:var(--green);}
+.calc-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:13px;padding:15px;font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;cursor:pointer;margin-top:4px;transition:transform .15s,box-shadow .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.calc-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(26,158,92,.35);}
+.bmi-result-hero{text-align:center;padding:20px 10px 12px;}
+.bmi-num{font-family:'Syne',sans-serif;font-size:5rem;font-weight:800;line-height:1;margin-bottom:10px;}
+.bmi-bdg{display:inline-flex;align-items:center;gap:8px;padding:8px 24px;border-radius:30px;font-family:'Syne',sans-serif;font-weight:700;font-size:.95rem;margin-bottom:10px;}
+.bmi-summ{font-size:.88rem;color:var(--text-muted);max-width:380px;margin:0 auto;}
+.scale-wrap{padding:0 4px;margin:20px 0 8px;}
+.scale-bar{height:14px;border-radius:20px;background:linear-gradient(to right,#3b82f6 0%,#22c55e 28%,#facc15 52%,#f97316 76%,#ef4444 100%);position:relative;margin-bottom:8px;}
+.scale-ndl{position:absolute;top:-7px;width:4px;height:28px;background:#111;border-radius:4px;transform:translateX(-50%);transition:left .9s cubic-bezier(.34,1.56,.64,1);box-shadow:0 2px 6px rgba(0,0,0,.35);}
+.scale-ndl::after{content:"";position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:#111;border-radius:50%;}
+.scale-lbls{display:flex;justify-content:space-between;font-size:.7rem;font-weight:700;color:var(--text-muted);}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0;}
+.stat-box{background:var(--surface2);border:1.5px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.stat-val{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;display:block;margin-bottom:2px;}
+.stat-lbl{font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
+.range-ban{background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:.88rem;margin-top:4px;}
+.adv-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+.adv-box{border-radius:14px;padding:16px 18px;}
+.adv-box h6{font-family:"Syne",sans-serif;font-weight:700;font-size:.88rem;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.adv-box ul{list-style:none;padding:0;margin:0;font-size:.82rem;line-height:1.7;color:var(--text-muted);}
+.adv-box ul li::before{content:"→ ";font-weight:700;}
+.ref-tbl{width:100%;border-collapse:collapse;}
+.ref-tbl th{background:var(--surface2);padding:9px 12px;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-muted);text-align:left;border-bottom:1px solid var(--border);}
+.ref-tbl td{padding:9px 12px;font-size:.84rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+.ref-tbl tr:last-child td{border-bottom:none;}
+.ref-tbl tr.hl td{font-weight:700;}
+.cdot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle;}
+.save-strip{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:#f0fdf4;border:1.5px solid #86efac;border-radius:14px;padding:16px 20px;}
+.save-btn2{background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px 20px;font-family:"Syne",sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+@media(max-width:600px){.adv-row{grid-template-columns:1fr;}}
+@media(max-width:768px){.bmi-hero{padding:22px 20px;}.bmi-num{font-size:3.8rem;}}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mt-4 mb-5">
+  <div class="bmi-hero">
+    <div class="bmi-hero-icon">⚖️</div>
+    <div><h1>BMI Calculator</h1><p>Calculate your Body Mass Index and get personalised health insights</p></div>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT -->
+    <div class="col-lg-5">
+      <div class="bmi-card">
+        <div class="bmi-card-title">
+          <div class="t-icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-calculator"></i></div>
+          Your Measurements
+        </div>
+        <label class="field-lbl">Weight</label>
+        <div class="bmi-iw"><input class="bmi-inp" type="number" id="w_kg" placeholder="70" min="20" max="300" step="0.1"><span class="bmi-unit">kg</span></div>
+        <label class="field-lbl">Height</label>
+        <div class="bmi-iw"><input class="bmi-inp" type="number" id="h_cm" placeholder="170" min="100" max="250"><span class="bmi-unit">cm</span></div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="field-lbl">Age <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+            <div class="bmi-iw"><input class="bmi-inp" type="number" id="a_yr" placeholder="30" min="5" max="120" style="font-size:.95rem;"><span class="bmi-unit">yrs</span></div>
+          </div>
+          <div class="col-6">
+            <label class="field-lbl">Gender <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+            <select class="bmi-sel" id="g_sel"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select>
+          </div>
+        </div>
+        <button class="calc-btn" id="calc-btn"><i class="bi bi-calculator-fill"></i> Calculate My BMI</button>
+      </div>
+
+      <div class="bmi-card">
+        <div class="bmi-card-title">
+          <div class="t-icon" style="background:#f0fdf4;color:#16a34a;"><i class="bi bi-table"></i></div>
+          BMI Classification (WHO)
+        </div>
+        <table class="ref-tbl" id="rtbl">
+          <thead><tr><th>Category</th><th>BMI Range</th><th>Risk</th></tr></thead>
+          <tbody>
+            <tr data-c="Severe Thinness">  <td><span class="cdot" style="background:#3b82f6;"></span>Severe Thinness</td>  <td>&lt; 16</td>    <td>Very High</td></tr>
+            <tr data-c="Moderate Thinness"><td><span class="cdot" style="background:#60a5fa;"></span>Moderate Thinness</td><td>16 – 16.9</td><td>High</td></tr>
+            <tr data-c="Mild Thinness">    <td><span class="cdot" style="background:#93c5fd;"></span>Mild Thinness</td>    <td>17 – 18.4</td><td>Moderate</td></tr>
+            <tr data-c="Normal Weight">    <td><span class="cdot" style="background:#22c55e;"></span>Normal Weight</td>    <td>18.5 – 24.9</td><td>Low</td></tr>
+            <tr data-c="Overweight">       <td><span class="cdot" style="background:#facc15;"></span>Overweight</td>       <td>25 – 29.9</td><td>Increased</td></tr>
+            <tr data-c="Obese Class I">    <td><span class="cdot" style="background:#f97316;"></span>Obese Class I</td>    <td>30 – 34.9</td><td>High</td></tr>
+            <tr data-c="Obese Class II">   <td><span class="cdot" style="background:#ef4444;"></span>Obese Class II</td>   <td>35 – 39.9</td><td>Very High</td></tr>
+            <tr data-c="Obese Class III">  <td><span class="cdot" style="background:#991b1b;"></span>Obese Class III</td>  <td>≥ 40</td>      <td>Extremely High</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col-lg-7">
+      <div id="ph">
+        <div class="bmi-card" style="text-align:center;padding:60px 30px;border-style:dashed;">
+          <div style="font-size:4rem;margin-bottom:16px;opacity:.2;">⚖️</div>
+          <h4 style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text-muted);margin-bottom:8px;">Enter your details</h4>
+          <p style="color:var(--text-muted);font-size:.88rem;margin:0;">Fill in your weight and height, then click <strong>Calculate My BMI</strong>.</p>
+        </div>
+      </div>
+
+      <div id="rs" style="display:none;">
+        <div class="bmi-card">
+          <div class="bmi-result-hero">
+            <div class="bmi-num" id="rn">—</div>
+            <div class="bmi-bdg" id="rb">—</div>
+            <p class="bmi-summ" id="rsm"></p>
+          </div>
+          <div class="scale-wrap">
+            <div class="scale-bar"><div class="scale-ndl" id="sn" style="left:0%;"></div></div>
+            <div class="scale-lbls">
+              <span>Underweight<br>&lt;18.5</span>
+              <span style="text-align:center;">Normal<br>18.5–24.9</span>
+              <span style="text-align:center;">Overweight<br>25–29.9</span>
+              <span style="text-align:right;">Obese<br>≥30</span>
+            </div>
+          </div>
+          <div class="stat-row">
+            <div class="stat-box"><span class="stat-val" id="sw" style="color:var(--green);">—</span><span class="stat-lbl">Your Weight</span></div>
+            <div class="stat-box"><span class="stat-val" id="sh" style="color:var(--green);">—</span><span class="stat-lbl">Your Height</span></div>
+            <div class="stat-box"><span class="stat-val" id="sr" style="color:var(--green);">—</span><span class="stat-lbl">Healthy Range</span></div>
+          </div>
+          <div class="range-ban"><i class="bi bi-info-circle-fill text-green" style="font-size:1.2rem;flex-shrink:0;"></i><span id="rd"></span></div>
+        </div>
+
+        <div class="bmi-card">
+          <div class="bmi-card-title">
+            <div class="t-icon" style="background:#fef9c3;color:#ca8a04;"><i class="bi bi-lightbulb-fill"></i></div>
+            Personalised Advice
+          </div>
+          <div class="adv-row" id="adv"></div>
+        </div>
+
+        {% if session.get('user_id') %}
+        <div class="save-strip">
+          <div style="flex:1;">
+            <strong style="font-family:'Syne',sans-serif;">Save to your health profile</strong>
+            <div style="font-size:.82rem;color:var(--text-muted);margin-top:2px;">Updates weight & height so Groq AI uses your real BMI for food analysis.</div>
+          </div>
+          <button class="save-btn2" id="sbtn"><i class="bi bi-person-check me-1"></i> Save to Profile</button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+!function(){
+var _b=null,_w=null,_h=null;
+
+document.getElementById("calc-btn").addEventListener("click",calc);
+document.addEventListener("keydown",function(e){if(e.key==="Enter")calc();});
+
+{% if session.get("user_id") %}
+fetch("/api/user-profile").then(function(r){return r.json();}).then(function(p){
+  if(p.weight_kg)document.getElementById("w_kg").value=p.weight_kg;
+  if(p.height_cm)document.getElementById("h_cm").value=p.height_cm;
+  if(p.age)document.getElementById("a_yr").value=p.age;
+  if(p.gender&&p.gender!=="prefer_not_to_say")document.getElementById("g_sel").value=p.gender;
+}).catch(function(){});
+{% endif %}
+
+function calc(){
+  var w=parseFloat(document.getElementById("w_kg").value);
+  var h=parseFloat(document.getElementById("h_cm").value);
+  if(!w||!h||isNaN(w)||isNaN(h)||w<=0||h<=0){alert("Please enter your weight (kg) and height (cm).");return;}
+  var hm=h/100,bmi=w/(hm*hm);
+  _b=Math.round(bmi*10)/10;_w=Math.round(w*10)/10;_h=Math.round(h*10)/10;
+  var mn=Math.round(18.5*hm*hm*10)/10,mx=Math.round(24.9*hm*hm*10)/10;
+  var nfo=info(_b);
+  document.getElementById("ph").style.display="none";
+  document.getElementById("rs").style.display="block";
+  var nel=document.getElementById("rn");nel.textContent=_b;nel.style.color=nfo.c;
+  var bel=document.getElementById("rb");bel.textContent=nfo.cat;bel.style.background=nfo.bg;bel.style.color=nfo.c;bel.style.border="1.5px solid "+nfo.bd;
+  document.getElementById("rsm").textContent=nfo.sum;
+  var pct=Math.min(100,Math.max(0,(_b-14)/28*100));
+  setTimeout(function(){document.getElementById("sn").style.left=pct+"%";},80);
+  document.getElementById("sw").textContent=_w+" kg";
+  document.getElementById("sh").textContent=_h+" cm";
+  document.getElementById("sr").textContent=mn+"–"+mx+" kg";
+  var dif=document.getElementById("rd");
+  if(_b>=18.5&&_b<=24.9){dif.innerHTML="<strong>You're within the healthy weight range!</strong> Keep up your current lifestyle.";}
+  else if(_b>24.9){dif.innerHTML="To reach a healthy weight, lose approximately <strong>"+Math.round((w-mx)*10)/10+" kg</strong>.";}
+  else{dif.innerHTML="To reach a healthy weight, gain approximately <strong>"+Math.round((mn-w)*10)/10+" kg</strong>.";}
+  document.querySelectorAll("#rtbl tbody tr").forEach(function(r){
+    var m=r.dataset.c===nfo.cat;r.classList.toggle("hl",m);r.style.background=m?nfo.bg:"";
+  });
+  adv(nfo.cat);
+  if(window.innerWidth<992)document.getElementById("rs").scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function info(b){
+  if(b<16)  return{cat:"Severe Thinness", c:"#1d4ed8",bg:"#dbeafe",bd:"#93c5fd",sum:"Severely underweight — please seek medical attention immediately."};
+  if(b<17)  return{cat:"Moderate Thinness",c:"#2563eb",bg:"#eff6ff",bd:"#bfdbfe",sum:"Moderately underweight. A doctor or dietitian can help you gain weight safely."};
+  if(b<18.5)return{cat:"Mild Thinness",  c:"#3b82f6",bg:"#f0f9ff",bd:"#bae6fd",sum:"Slightly underweight. Eating more nutrient-rich foods can help."};
+  if(b<25)  return{cat:"Normal Weight",  c:"#16a34a",bg:"#f0fdf4",bd:"#86efac",sum:"You're within the healthy weight range. Keep up your healthy habits!"};
+  if(b<30)  return{cat:"Overweight",     c:"#ca8a04",bg:"#fefce8",bd:"#fde047",sum:"Slightly above the healthy range. Small lifestyle changes can make a big difference."};
+  if(b<35)  return{cat:"Obese Class I",  c:"#ea580c",bg:"#fff7ed",bd:"#fdba74",sum:"Class I obesity. Losing 5–10% of body weight significantly reduces health risks."};
+  if(b<40)  return{cat:"Obese Class II", c:"#dc2626",bg:"#fef2f2",bd:"#fca5a5",sum:"Class II obesity. Medical guidance is recommended for safe weight management."};
+           return{cat:"Obese Class III",c:"#991b1b",bg:"#fff1f2",bd:"#fda4af",sum:"Class III obesity. Please consult a healthcare professional."};
+}
+
+var A={
+"Severe Thinness": {d:["Eat calorie-dense whole foods","5–6 small meals per day","Add healthy fats: nuts, avocado, olive oil","See a doctor urgently"],e:["Avoid intense cardio","Only light activity if cleared by doctor","Focus on rest and recovery","Gentle walking"]},
+"Moderate Thinness":{d:["Add 300–500 kcal/day","Protein at every meal","Snack on nuts, dairy, whole grains","Track meals"],e:["Light strength training 2–3x/week","Avoid long cardio","Focus on building muscle","Rest well between sessions"]},
+"Mild Thinness":   {d:["Slightly increase calories","Add healthy snacks","Complex carbs + lean proteins","Choose nutrient-dense foods"],e:["Balanced cardio + strength training","150 min/week moderate activity","Include compound lifts","Stay hydrated"]},
+"Normal Weight":   {d:["Maintain balanced macros","5 portions of fruit & veg daily","8+ glasses of water per day","Limit processed foods and sugar"],e:["150+ min moderate cardio/week","Strength training 2–3x/week","Stay active throughout the day","Include flexibility work"]},
+"Overweight":      {d:["Cut 300–500 kcal/day","Eliminate sugary drinks","More fibre: fruits, veg, legumes","Lean proteins and whole grains"],e:["30 min brisk walking daily","Strength training 2–3x/week","Take stairs, walk after meals","Reduce sitting time"]},
+"Obese Class I":   {d:["500 kcal/day deficit plan","Vegetables, lean protein, legumes","Cut sugary drinks and refined carbs","Consider a dietitian"],e:["Low-impact: swimming, cycling, walking","30–45 min/day, 5 days/week","Start small and build up","Avoid high-impact on joints"]},
+"Obese Class II":  {d:["Medical nutrition therapy","Strict deficit under guidance","Whole foods, eliminate junk","Monitor BP, sugar, cholesterol"],e:["Water aerobics or pool walking","Chair-based exercises","Gradual progression","Physiotherapy if needed"]},
+"Obese Class III": {d:["Seek medical + dietary support","VLCD only under supervision","Discuss bariatric with doctor","Eliminate trigger foods"],e:["Exercise only with medical clearance","Bed/chair exercises to begin","Physical therapy recommended","Focus on daily mobility"]}
+};
+
+function adv(cat){
+  var a=A[cat]||A["Normal Weight"];
+  var dc=cat==="Normal Weight"?"#f0fdf4":"#fefce8",db=cat==="Normal Weight"?"#86efac":"#fde047",dt=cat==="Normal Weight"?"#15803d":"#713f12";
+  document.getElementById("adv").innerHTML=
+    "<div class='adv-box' style='background:"+dc+";border:1.5px solid "+db+";'><h6 style='color:"+dt+";'><i class='bi bi-egg-fried'></i> Diet Advice</h6><ul>"+a.d.map(function(x){return"<li>"+x+"</li>";}).join("")+"</ul></div>"+
+    "<div class='adv-box' style='background:#eff6ff;border:1.5px solid #bfdbfe;'><h6 style='color:#1e40af;'><i class='bi bi-bicycle'></i> Exercise Advice</h6><ul>"+a.e.map(function(x){return"<li>"+x+"</li>";}).join("")+"</ul></div>";
+}
+
+{% if session.get("user_id") %}
+document.getElementById("sbtn").addEventListener("click",function(){
+  if(!_w||!_h)return;
+  var b=this;b.disabled=true;b.innerHTML="<i class='bi bi-hourglass-split me-1'></i> Saving...";
+  fetch("/api/save-health-profile",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weight_kg:_w,height_cm:_h})})
+  .then(function(r){return r.json();}).then(function(d){
+    if(d.success){b.innerHTML="<i class='bi bi-check-circle-fill me-1'></i> Saved!";b.style.background="#15803d";}
+    else{b.disabled=false;b.innerHTML="<i class='bi bi-person-check me-1'></i> Save to Profile";}
+  });
+});
+{% endif %}
+
+}();
+</script>
+{% endblock %}

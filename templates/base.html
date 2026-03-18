@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NutriScan — Smart Nutrition Analysis{% endblock %}</title>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <style>
+        /* ── Design Tokens ── */
+        :root {
+            --green:       #1a9e5c;
+            --green-light: #22c76e;
+            --green-dim:   #0f6e3f;
+            --accent:      #f0ff44;
+            --surface:     #ffffff;
+            --surface2:    #f5f7f4;
+            --border:      #e4ebe5;
+            --text:        #111a13;
+            --text-muted:  #6b7e6e;
+            --danger:      #e03e3e;
+            --nav-h:       66px;
+            --radius:      14px;
+            --shadow:      0 4px 24px rgba(0,0,0,0.08);
+            --shadow-lg:   0 12px 40px rgba(0,0,0,0.13);
+        }
+
+        /* ── Base ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 15px;
+            color: var(--text);
+            background: var(--surface2);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        h1, h2, h3, h4, h5, h6,
+        .navbar-brand, .syne { font-family: 'Syne', sans-serif; }
+
+        /* ── Navbar ── */
+        .navbar {
+            height: var(--nav-h);
+            background: var(--green) !important;
+            border-bottom: 3px solid var(--green-dim);
+            padding: 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 1040;
+            box-shadow: 0 2px 20px rgba(15,110,63,0.25);
+        }
+        .navbar .container { height: 100%; }
+
+        .navbar-brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #fff !important;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            text-decoration: none;
+        }
+        .brand-icon {
+            width: 36px; height: 36px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .brand-text span {
+            display: block;
+            font-size: 0.62rem;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 400;
+            color: rgba(255,255,255,0.75);
+            letter-spacing: 0.5px;
+            margin-top: -3px;
+        }
+
+        /* Nav links */
+        .navbar-nav .nav-link {
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 500;
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.88) !important;
+            padding: 6px 13px !important;
+            border-radius: 8px;
+            transition: background 0.18s, color 0.18s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .navbar-nav .nav-link:hover,
+        .navbar-nav .nav-link.active {
+            background: rgba(255,255,255,0.15);
+            color: #fff !important;
+        }
+        .navbar-nav .nav-link i { font-size: 15px; }
+
+        /* Dropdown */
+        .dropdown-menu {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 6px;
+            margin-top: 8px !important;
+            min-width: 200px;
+            animation: dropIn 0.18s ease;
+        }
+        @keyframes dropIn {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.88rem;
+            font-weight: 500;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            transition: background 0.15s;
+        }
+        .dropdown-item:hover { background: var(--surface2); color: var(--green); }
+        .dropdown-item i { font-size: 15px; width: 18px; text-align: center; }
+        .dropdown-divider { margin: 4px 0; border-color: var(--border); }
+
+        /* User avatar */
+        .user-avatar {
+            width: 30px; height: 30px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px;
+            color: var(--green-dim);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .user-info-dropdown {
+            padding: 10px 14px;
+            background: var(--surface2);
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+        .user-info-dropdown .name {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .user-info-dropdown .email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        /* Auth buttons */
+        .btn-nav-login {
+            background: var(--accent);
+            color: var(--green-dim) !important;
+            font-weight: 700 !important;
+            font-size: 0.85rem !important;
+            padding: 7px 18px !important;
+            border-radius: 8px !important;
+            border: none;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .btn-nav-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: #e8f73a !important;
+        }
+        .btn-nav-register {
+            color: rgba(255,255,255,0.88) !important;
+            font-weight: 500 !important;
+            padding: 7px 14px !important;
+            border-radius: 8px !important;
+        }
+        .btn-nav-register:hover {
+            background: rgba(255,255,255,0.12) !important;
+            color: #fff !important;
+        }
+
+        /* AI badge in nav */
+        .ai-nav-btn {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #fff !important;
+            font-weight: 600 !important;
+            font-size: 0.82rem !important;
+            padding: 5px 13px !important;
+            border-radius: 20px !important;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .ai-nav-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            color: #fff !important;
+        }
+        .ai-pulse {
+            width: 7px; height: 7px;
+            background: #a5f3fc;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0.5; transform: scale(0.7); }
+        }
+
+        /* Admin badge */
+        .badge-admin {
+            background: var(--danger);
+            color: #fff;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 20px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        /* ── Flash messages ── */
+        .flash-wrap {
+            position: fixed;
+            top: calc(var(--nav-h) + 12px);
+            right: 16px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 300px;
+            max-width: 380px;
+        }
+        .flash-wrap .alert {
+            border: none;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            font-size: 0.88rem;
+            font-weight: 500;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.25s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .alert-success { background: #ecfdf5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-danger  { background: #fef2f2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .alert-warning { background: #fffbeb; color: #92400e; border-left: 4px solid #f59e0b; }
+        .alert-info    { background: #eff6ff; color: #1e40af; border-left: 4px solid #3b82f6; }
+
+        /* ── Main content ── */
+        main {
+            flex: 1;
+            padding-top: 28px;
+            padding-bottom: 48px;
+        }
+
+        /* ── Shared UI components ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+
+        .btn-primary {
+            background: var(--green);
+            border-color: var(--green);
+            font-weight: 600;
+            border-radius: 9px;
+            padding: 9px 22px;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .btn-primary:hover { background: var(--green-dim); border-color: var(--green-dim); transform: translateY(-1px); }
+
+        .btn-outline-primary {
+            color: var(--green);
+            border-color: var(--green);
+            font-weight: 600;
+            border-radius: 9px;
+        }
+        .btn-outline-primary:hover { background: var(--green); border-color: var(--green); }
+
+        .badge.bg-success { background: var(--green) !important; }
+
+        /* Progress bars */
+        .progress { border-radius: 20px; background: var(--border); height: 8px; }
+        .progress-bar { border-radius: 20px; }
+
+        /* Autocomplete */
+        #autocomplete-results {
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 var(--radius) var(--radius);
+            background: var(--surface);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+        }
+        .autocomplete-item {
+            border: none;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            padding: 10px 16px;
+            width: 100%;
+            background: transparent;
+            font-size: 0.88rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.15s;
+            cursor: pointer;
+        }
+        .autocomplete-item:last-child { border-bottom: none; }
+        .autocomplete-item:hover { background: var(--surface2); color: var(--green); }
+        .autocomplete-item .badge { font-size: 0.68rem; }
+
+        /* ── Footer ── */
+        footer {
+            background: var(--green-dim);
+            color: rgba(255,255,255,0.9);
+            padding: 52px 0 28px;
+            margin-top: auto;
+        }
+        footer h5 {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+        footer p, footer li, footer a {
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.78);
+            text-decoration: none;
+            line-height: 1.8;
+        }
+        footer a:hover { color: var(--accent); }
+        footer .footer-brand {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        footer .footer-brand .brand-icon {
+            width: 34px; height: 34px;
+            background: var(--accent);
+            border-radius: 9px;
+            font-size: 16px;
+        }
+        footer .social-links a {
+            width: 34px; height: 34px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            transition: background 0.2s;
+            margin-right: 6px;
+        }
+        footer .social-links a:hover { background: var(--accent); color: var(--green-dim); }
+        footer hr { border-color: rgba(255,255,255,0.12); margin: 28px 0 18px; }
+        footer .footer-bottom {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.55);
+            text-align: center;
+        }
+
+        /* ── Navbar toggler ── */
+        .navbar-toggler {
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 5px 9px;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255%2c255%2c255%2c0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+        }
+
+        /* ── Utility ── */
+        .text-green { color: var(--green); }
+        .bg-green   { background: var(--green); }
+        .text-accent { color: var(--accent); }
+
+        {% block extra_css %}{% endblock %}
+    </style>
+</head>
+<body>
+
+<!-- ══ Navbar ══ -->
+<nav class="navbar navbar-expand-lg">
+    <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand" href="/">
+            <div class="brand-icon">🥦</div>
+            <div class="brand-text">
+                NutriScan
+                <span>Smart Nutrition Analysis</span>
+            </div>
+        </a>
+
+        <!-- Mobile toggle -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav links -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto ms-3 gap-1">
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">
+                        <i class="bi bi-house-door"></i> Home
+                    </a>
+                </li>
+
+                <!-- Products -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-basket3"></i> Products
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/#manual-lookup">
+                            <i class="bi bi-search text-green"></i> Search Product
+                        </a></li>
+                        <li><a class="dropdown-item" href="/#qr-scanner">
+                            <i class="bi bi-qr-code-scan text-green"></i> QR Scanner
+                        </a></li>
+                        {% if session.get('is_admin') %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin">
+                            <i class="bi bi-speedometer2 text-danger"></i> Admin Dashboard
+                        </a></li>
+                        {% endif %}
+                    </ul>
+                </li>
+
+                <!-- Health Tools -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                        <i class="bi bi-heart-pulse"></i> Health Tools
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-calculator text-green"></i> BMI Calculator
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-graph-up text-green"></i> Daily Tracker
+                        </a></li>
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-clipboard-check text-green"></i> Meal Planner
+                        </a></li>
+                    </ul>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/about' %}active{% endif %}" href="/about">
+                        <i class="bi bi-info-circle"></i> About
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/contact' %}active{% endif %}" href="/contact">
+                        <i class="bi bi-envelope"></i> Contact
+                    </a>
+                </li>
+
+            </ul>
+
+            <!-- Right side -->
+            <ul class="navbar-nav align-items-center gap-2">
+
+                <!-- AI Assistant button (always visible when logged in) -->
+                {% if session.get('user_id') %}
+                <li class="nav-item">
+                    <a class="nav-link ai-nav-btn" href="/assistant">
+                        <div class="ai-pulse"></div>
+                        <i class="bi bi-robot"></i> AI Assistant
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if session.get('user_id') %}
+                <!-- Logged in user menu -->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 pe-1"
+                       href="#" data-bs-toggle="dropdown">
+                        <div class="user-avatar">
+                            {% if session.get('is_admin') %}
+                                <i class="bi bi-shield-check"></i>
+                            {% else %}
+                                {{ session.get('user_name', 'U')[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <span class="d-none d-lg-inline" style="font-size:0.88rem; font-weight:600; color:#fff;">
+                            {{ session.get('user_name', 'User').split()[0] }}
+                        </span>
+                        {% if session.get('is_admin') %}
+                        <span class="badge-admin">Admin</span>
+                        {% endif %}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <div class="user-info-dropdown">
+                                <div class="name">{{ session.get('user_name', 'User') }}</div>
+                                <div class="email">{{ session.get('user_email', '') }}</div>
+                                {% if session.get('is_admin') %}
+                                <span class="badge-admin mt-1 d-inline-block">Administrator</span>
+                                {% endif %}
+                            </div>
+                        </li>
+                        <li><a class="dropdown-item" href="/profile">
+                            <i class="bi bi-person text-green"></i> My Profile
+                        </a></li>
+                        <li><a class="dropdown-item" href="/assistant">
+                            <i class="bi bi-robot" style="color:#7c3aed;"></i> AI Assistant
+                        </a></li>
+                        {% if session.get('is_admin') %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/admin">
+                            <i class="bi bi-speedometer2 text-danger"></i> Admin Dashboard
+                        </a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        <li><a class="dropdown-item" href="#">
+                            <i class="bi bi-star text-green"></i> Favourites
+                        </a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        
+                        <li><a class="dropdown-item" href="/logout" style="color:var(--danger);">
+                            <i class="bi bi-box-arrow-right" style="color:var(--danger);"></i> Logout
+                        </a></li>
+                    </ul>
+                </li>
+
+                {% else %}
+                <!-- Not logged in -->
+                <li class="nav-item">
+                    <a class="nav-link btn-nav-register" href="/register">
+                        <i class="bi bi-person-plus"></i> Register
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link btn-nav-login" href="/login">
+                        <i class="bi bi-box-arrow-in-right"></i> Login
+                    </a>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- ══ Flash Messages ══ -->
+<div class="flash-wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {% if category == 'success' %}<i class="bi bi-check-circle-fill"></i>
+                {% elif category == 'danger' %}<i class="bi bi-x-circle-fill"></i>
+                {% elif category == 'warning' %}<i class="bi bi-exclamation-triangle-fill"></i>
+                {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                {{ message }}
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
+
+<!-- ══ Main Content ══ -->
+<main class="container">
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ══ Footer ══ -->
+<footer>
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="footer-brand">
+                    <div class="brand-icon d-flex align-items-center justify-content-center">🥦</div>
+                    NutriScan
+                </div>
+                <p class="mb-4">Making healthy choices easier through technology. Scan, analyze, and make informed decisions about your food — powered by real AI.</p>
+                <div class="social-links">
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-linkedin"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-2 col-md-6 col-6">
+                <h5>Quick Links</h5>
+                <ul class="list-unstyled">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/about">About</a></li>
+                    <li><a href="/contact">Contact</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Use</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6 col-6">
+                <h5>Resources</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#">Nutrition Guide</a></li>
+                    <li><a href="#">Healthy Recipes</a></li>
+                    <li><a href="#">Blog</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="/assistant">AI Assistant</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <h5>Contact Us</h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2"><i class="bi bi-envelope me-2" style="color:var(--accent);"></i><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="472e29212807293233352e342426296924282a">[email&#160;protected]</a></li>
+                    <li class="mb-2"><i class="bi bi-telephone me-2" style="color:var(--accent);"></i>+1 (555) 123-4567</li>
+                    <li class="mb-3"><i class="bi bi-geo-alt me-2" style="color:var(--accent);"></i>123 Health Street</li>
+                    <li>
+                        <a href="/assistant" class="d-inline-flex align-items-center gap-2 px-3 py-2"
+                           style="background:rgba(255,255,255,0.12); border-radius:9px; color:#fff; font-size:0.85rem; font-weight:600; text-decoration:none; transition:background 0.2s;"
+                           onmouseover="this.style.background='rgba(240,255,68,0.2)'"
+                           onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+                            <i class="bi bi-robot"></i> Chat with AI
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <hr>
+        <div class="footer-bottom">
+            &copy; 2024 NutriScan. All rights reserved. &nbsp;|&nbsp; Made with
+            <i class="bi bi-heart-fill" style="color:#f87171;"></i> for healthier lives
+        </div>
+    </div>
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    // Auto-dismiss flash alerts after 5s
+    setTimeout(() => {
+        document.querySelectorAll('.alert').forEach(a => {
+            if (a.classList.contains('show')) {
+                setTimeout(() => {
+                    a.classList.remove('show');
+                    a.classList.add('fade');
+                    setTimeout(() => a.remove(), 300);
+                }, 5000);
+            }
+        });
+    }, 100);
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>
