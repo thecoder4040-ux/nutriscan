@@ -469,6 +469,31 @@
             }
         }
 
+        /* ── Compare page mobile fix ── */
+        @media (max-width: 768px) {
+            /* Make compare table scroll horizontally */
+            .compare-table-wrap, .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            /* Compare header cards stack properly */
+            .compare-header {
+                flex-direction: column !important;
+            }
+            .compare-col {
+                width: 100% !important;
+                min-width: unset !important;
+            }
+            /* Fix table column widths on mobile */
+            table.compare-table {
+                min-width: 500px;
+            }
+            /* Product hero cards on compare page */
+            .compare-product-card {
+                min-width: 140px !important;
+            }
+        }
+
         {% block extra_css %}{% endblock %}
     </style>
 </head>
@@ -530,12 +555,6 @@
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="/bmi">
                             <i class="bi bi-calculator text-green"></i> BMI Calculator
-                        </a></li>
-                        <li><a class="dropdown-item" href="#">
-                            <i class="bi bi-graph-up text-green"></i> Daily Tracker
-                        </a></li>
-                        <li><a class="dropdown-item" href="#">
-                            <i class="bi bi-clipboard-check text-green"></i> Meal Planner
                         </a></li>
                     </ul>
                 </li>
@@ -608,11 +627,6 @@
                             <i class="bi bi-speedometer2 text-danger"></i> Admin Dashboard
                         </a></li>
                         {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        
-                        <li><a class="dropdown-item" href="#">
-                            <i class="bi bi-star text-green"></i> Favourites
-                        </a></li>
                         <li><hr class="dropdown-divider"></li>
                         
                         <li><a class="dropdown-item" href="/logout" style="color:var(--danger);">
