@@ -311,8 +311,53 @@
     }
 
     @media (max-width: 768px) {
-        .product-hero { padding: 24px 20px; }
-        .product-img-wrap { display: none; }
+        .product-hero { padding: 24px 20px 20px; }
+        .product-img-wrap {
+            display: none; /* hidden in hero on mobile */
+        }
+    }
+
+    /* Mobile image shown below hero */
+    .product-img-mobile {
+        display: none;
+    }
+    @media (max-width: 768px) {
+        .product-img-mobile {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .product-img-mobile .product-img-box {
+            width: 140px; height: 140px;
+        }
+        .product-img-mobile img {
+            width: 140px; height: 140px;
+            object-fit: contain; padding: 8px;
+        }
+        /* Fix nutrient grid on mobile */
+        .nutrient-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+        /* Fix verdict section on mobile */
+        .verdict-section {
+            grid-template-columns: 1fr !important;
+        }
+        /* Fix actions bar on mobile */
+        .actions-bar {
+            flex-direction: column;
+        }
+        .actions-bar .btn {
+            width: 100%;
+            text-align: center;
+        }
+        /* Fix score ring overlap on mobile */
+        .score-ring { display: none; }
+        /* Fix AI CTA on mobile */
+        .ai-cta {
+            flex-direction: column;
+            text-align: center;
+        }
+        .ai-cta .btn-ai { width: 100%; }
     }
 
     /* ── AI Generated Banner ── */
@@ -513,6 +558,21 @@
             </div>
             {% endif %}
         </div>
+    </div>
+</div>
+
+<!-- Mobile product image (shown below hero on small screens) -->
+<div class="product-img-mobile">
+    <div class="product-img-box" id="product-img-box-mobile">
+        {% if product['image_url'] %}
+        <img src="{{ product['image_url'] }}"
+             alt="{{ name }}"
+             onerror="this.style.display='none';">
+        {% else %}
+        <div style="font-family:'Syne',sans-serif;font-size:3rem;font-weight:800;color:var(--green);opacity:0.3;">
+            {{ name[0].upper() }}
+        </div>
+        {% endif %}
     </div>
 </div>
 
@@ -983,9 +1043,11 @@
             data-bs-toggle="modal" data-bs-target="#analysisModal">
         <i class="bi bi-person-check me-1"></i> Personalized Analysis
     </button>
-    
-    
-    
+    {% if session.get('user_id') %}
+    <button class="btn btn-outline-success" style="border-radius:10px;" id="fav-btn" onclick="toggleFav()">
+        <i class="bi bi-bookmark me-1"></i> <span id="fav-label">Save</span>
+    </button>
+    {% endif %}
     <a href="/compare/PROD001/vs/{{ pid }}" class="btn btn-outline-info" style="border-radius:10px;">
         <i class="bi bi-bar-chart me-1"></i> Compare with Apple
     </a>
@@ -1344,13 +1406,70 @@
 {% block extra_js %}
 <script>
 // ══════════════════════════════════════════════════
-//  SAVE TO FAVOURITES
+//  FAVOURITES
 // ══════════════════════════════════════════════════
-function saveToFav() {
-    const btn = event.target.closest('button');
-    btn.innerHTML = '<i class="bi bi-bookmark-fill me-1"></i> Saved!';
-    btn.classList.replace('btn-outline-success', 'btn-success');
+const FAV_PRODUCT_ID = '{{ pid }}';
+let isFavourited = false;
+
+// Check saved state on page load
+document.addEventListener('DOMContentLoaded', () => {
+    {% if session.get('user_id') %}
+    fetch('/api/favourite/check/' + FAV_PRODUCT_ID)
+        .then(r => r.json())
+        .then(d => { if (d.saved) setFavState(true); });
+    {% endif %}
+});
+
+function setFavState(saved) {
+    isFavourited = saved;
+    const btn   = document.getElementById('fav-btn');
+    const label = document.getElementById('fav-label');
+    if (saved) {
+        btn.classList.replace('btn-outline-success', 'btn-success');
+        btn.querySelector('i').className = 'bi bi-bookmark-fill me-1';
+        label.textContent = 'Saved';
+    } else {
+        btn.classList.replace('btn-success', 'btn-outline-success');
+        btn.querySelector('i').className = 'bi bi-bookmark me-1';
+        label.textContent = 'Save';
+    }
+}
+
+function toggleFav() {
+    const btn = document.getElementById('fav-btn');
     btn.disabled = true;
+    const productData = {{ product | tojson }};
+    fetch('/api/favourite/toggle', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ product_id: FAV_PRODUCT_ID, product_data: productData })
+    })
+    .then(r => r.json())
+    .then(d => {
+        btn.disabled = false;
+        if (d.success) {
+            setFavState(d.saved);
+            // Show brief toast
+            showFavToast(d.saved ? '⭐ Saved to Favourites!' : 'Removed from Favourites');
+        } else {
+            alert(d.error || 'Could not save. Please try again.');
+        }
+    })
+    .catch(() => { btn.disabled = false; });
+}
+
+function showFavToast(msg) {
+    let t = document.getElementById('fav-toast');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'fav-toast';
+        t.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#15803d;color:#fff;padding:12px 24px;border-radius:30px;font-weight:700;font-size:0.9rem;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,0.2);transition:opacity 0.3s;';
+        document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => { t.style.opacity = '0'; }, 2500);
 }
 
 // ══════════════════════════════════════════════════

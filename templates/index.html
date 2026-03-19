@@ -333,8 +333,39 @@
     .feature-item p  { font-size: 0.76rem; color: var(--text-muted); margin: 0; }
 
     @media (max-width: 768px) {
-        .hero { padding: 36px 24px; }
+        .hero { padding: 28px 20px; }
         .hero-emoji { display: none; }
+        .hero h1 { font-size: 1.8rem; }
+        .hero-stats { gap: 16px; }
+
+        /* Feature strip scrolls horizontally on mobile */
+        .feature-strip {
+            overflow-x: auto;
+            flex-wrap: nowrap !important;
+            padding-bottom: 8px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .feature-item { min-width: 130px; flex-shrink: 0; }
+
+        /* Search and QR stack vertically */
+        .search-card, .qr-card { margin-bottom: 16px; }
+
+        /* Compare section */
+        .compare-inputs {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        /* Cards fill full width */
+        .col-lg-6 { margin-bottom: 0; }
+    }
+
+    @media (max-width: 576px) {
+        /* Autocomplete dropdown full width */
+        .autocomplete-box { width: 100% !important; }
+
+        /* Search input font size */
+        .search-input { font-size: 0.9rem; }
     }
 </style>
 {% endblock %}
