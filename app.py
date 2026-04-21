@@ -471,6 +471,35 @@ Return ONLY the corrected name, nothing else."""}],
     return raw_name
 
 
+def is_food_product(name: str) -> bool:
+    """Use Groq AI to verify if the given name is actually a food/beverage product."""
+    try:
+        from groq import Groq
+        client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+        resp = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content":
+                f"""Is "{name}" a real food product, beverage, snack, or edible item that humans consume?
+Answer ONLY with "YES" or "NO".
+- "Maggi" -> YES
+- "Coca-Cola" -> YES
+- "Ryukendo" -> NO (it's a TV show)
+- "Toyota" -> NO (it's a car brand)
+- "Laptop" -> NO
+- "Oreo" -> YES
+Answer:"""}],
+            max_tokens=5,
+            temperature=0
+        )
+        answer = resp.choices[0].message.content.strip().upper()
+        print(f"[FoodCheck] '{name}' -> {answer}")
+        return answer.startswith("YES")
+    except Exception as e:
+        print(f"[FoodCheck] validation failed: {e}")
+        # On error, allow it through (fail open) to avoid blocking real products
+        return True
+
+
 def ai_generate_product(product_name: str):
     """Ask Groq AI to generate nutrition data for an unknown product.
     Corrects spelling, caches results so same product always returns same data."""
@@ -484,6 +513,11 @@ def ai_generate_product(product_name: str):
     if cache_key in _ai_product_cache:
         print(f"[Cache] Returning cached data for: {corrected_name}")
         return _ai_product_cache[cache_key]
+
+    # Step 3: Validate it's actually a food product
+    if not is_food_product(corrected_name):
+        print(f"[FoodCheck] '{corrected_name}' is NOT a food product. Blocking AI generation.")
+        return None
 
     try:
         from groq import Groq
@@ -597,7 +631,7 @@ def product_page(product_identifier):
             ai_product["image_url"] = fetch_product_image(ai_product.get("name", product_identifier))
         return render_template('product.html', product=ai_product, ai_generated=True)
 
-    flash(f'Product "{product_identifier}" not found and AI could not generate data. Please try a different name.', 'danger')
+    flash(f'"{product_identifier}" does not appear to be a food or beverage product. Please enter a valid food product name.', 'warning')
     return redirect('/')
 
 @app.route('/api/save-ai-product', methods=['POST'])
