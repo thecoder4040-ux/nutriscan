@@ -1,8 +1,8 @@
-"""
-Run this to reset admin password.
-Place next to app.py and run:  python reset_admin.py
-"""
-import sqlite3, hashlib
+import sqlite3, hashlib, sys, os
+sys.path.insert(0, os.path.dirname(__file__))
+
+import database
+database.init_db()
 
 DB_PATH = 'nutrition_enhanced.db'
 
@@ -32,4 +32,3 @@ else:
     print(f"  Password: {new_password}")
 
 conn.close()
-print(f"\n  URL: http://localhost:5000/login")
