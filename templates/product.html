@@ -454,6 +454,18 @@
         from { opacity:0; transform:translateY(-8px); }
         to   { opacity:1; transform:translateY(0); }
     }
+    /* ── Mobile accent color fix ── */
+@media (max-width: 768px) {
+    .badge-healthy { 
+        color: #ca8a04 !important; 
+        border-color: #ca8a04 !important;
+        background: rgba(202,138,4,0.1) !important;
+    }
+    [style*="color:var(--accent)"],
+    [style*="color: var(--accent)"] {
+        color: #ca8a04 !important;
+    }
+}
 </style>
 {% endblock %}
 

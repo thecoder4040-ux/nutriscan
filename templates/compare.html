@@ -433,6 +433,22 @@
     .val-num { font-size: 1rem; }
     .val-bar-wrap { display: none; }
 }
+/* ── Mobile fixes ── */
+@media (max-width: 480px) {
+    .product-headers, .compare-row, .score-row {
+        grid-template-columns: 80px 1fr 1fr;
+    }
+    .cr-label { padding: 8px 8px; font-size: 0.7rem; }
+    .cr-val { padding: 8px 8px; gap: 4px; }
+    .val-num { font-size: 0.88rem; }
+    .val-bar-wrap { display: none; }
+    .val-tag { font-size: 0.62rem; padding: 2px 5px; }
+    .ph-img, .ph-letter { width: 40px; height: 40px; font-size: 1.2rem; }
+    .ph-info h3 { font-size: 0.85rem; }
+    .ph-score .score-num { font-size: 1.1rem; }
+    .ph-score .score-lbl { display: none; }
+    .score-circle { width: 38px; height: 38px; font-size: 0.85rem; }
+}
 </style>
 
 <div class="compare-page">
