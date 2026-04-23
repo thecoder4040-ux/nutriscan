@@ -505,6 +505,10 @@ def ai_generate_product(product_name: str):
     Corrects spelling, caches results so same product always returns same data."""
     import json
 
+    # Strip AI- prefix if present (e.g. AI-FERREROROC -> Ferreroroc)
+    if product_name.upper().startswith('AI-'):
+        product_name = product_name[3:].replace('-', ' ').replace('_', ' ').strip().title()
+
     # Step 1: Correct spelling
     corrected_name = correct_product_name(product_name)
     cache_key = corrected_name.lower().strip()
@@ -1716,7 +1720,7 @@ def generate_product_qr(product_id):
     qr = qrcode.QRCode(version=1,
                        error_correction=qrcode.constants.ERROR_CORRECT_L,
                        box_size=10, border=4)
-    base_url = request.host_url.rstrip("/")
+    base_url = os.environ.get('BASE_URL', 'https://web-production-13b80.up.railway.app')
     product_url = f"{base_url}/p/{product_id}"
     qr.add_data(product_url)
     qr.make(fit=True)
