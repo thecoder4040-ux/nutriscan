@@ -367,6 +367,10 @@
         /* Search input font size */
         .search-input { font-size: 0.9rem; }
     }
+    @media (max-width: 768px) {
+    .hero h1 span { color: #ca8a04 !important; }
+    .hero-stat .num { color: #ca8a04 !important; }
+}
 </style>
 {% endblock %}
 
@@ -561,7 +565,7 @@
 
 {% block extra_js %}
 <!-- jsQR — real QR code decoder that runs in the browser -->
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js" async></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
 <script>
 // ═══════════════════════════════════════════════
